@@ -19,8 +19,7 @@ namespace Blacklist
         public override Guid Id => id;
 
         public override string Name => "Blacklist";
-
-
+        
         public Stream GetThumbImage()
         {
             var type = GetType();

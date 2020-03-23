@@ -7,7 +7,7 @@ namespace Blacklist.Api
 {
     public class FirewallController
     {
-        public static string AddFirewallRule(Connection connection, PluginConfiguration config)
+        public static string AddFirewallRule(Connection connection)
         {
             var result = string.Empty;
 
@@ -18,7 +18,7 @@ namespace Blacklist.Api
                     break;
 
                 case false:
-                    result = LinuxFirewall.BlockIpConnection(connection, config);
+                    result = LinuxFirewall.BlockIpConnection(connection);
                     break;
             }
 
@@ -40,6 +40,24 @@ namespace Blacklist.Api
             }
 
             return result;
+        }
+
+        public static bool FirewallConnectionRuleExists(Connection connection)
+        {
+            var result = string.Empty;
+            switch (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                case true:
+                    result = WindowsCmd.GetCommandOutput("netsh.exe",$" advfirewall firewall show rule name=\"{connection.RuleName}\"");
+                    return result != "No rules match the specified criteria";
+                case false:
+                    result = LinuxBash.GetCommandOutput($"iptables -L INPUT -v -n | grep \"{connection.Ip}\"");
+                    //We need a result example to condition this:
+                    //if result is ?? then move on, else add the ip
+                    break;
+            }
+
+            return false;
         }
     }
 }

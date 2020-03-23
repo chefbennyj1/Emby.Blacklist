@@ -38,9 +38,11 @@
                             ruleDeleteButtons.forEach(button => {
                                 button.addEventListener('click',
                                     (e) => {
+
                                         var row = e.target.closest('tr');
                                         var ip = row.querySelector('[data-title="Ip"]').innerHTML;
                                         var id = row.id;
+
                                         ApiClient.deleteFirewallRule(ip, id).then((response) => {
                                             if (response.statusText === "OK") {
                                                 ApiClient.getPluginConfiguration(pluginId).then((config) => {

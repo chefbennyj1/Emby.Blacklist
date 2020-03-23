@@ -1,7 +1,4 @@
 ﻿using System.Linq;
-using System.Runtime.InteropServices;
-using Blacklist.Api.Linux;
-using Blacklist.Api.Windows;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
@@ -11,6 +8,9 @@ namespace Blacklist.Api
 {
     public class FirewallService : IService
     {
+
+
+
         [Route("/DeleteFirewallRule", "DELETE", Summary = "Delete firewall rule created by failed login attempts")]
         public class DeleteFirewallRule : IReturn<string>
         {
@@ -33,12 +33,11 @@ namespace Blacklist.Api
 
         public string Delete(DeleteFirewallRule request)
         {
-
             var config     = Plugin.Instance.Configuration;
             var connection = config.BannedConnections.FirstOrDefault(con => con.RuleName == request.RuleName);
             var result     = FirewallController.RemoveFirewallRule(connection, config);
 
-            logger.Info($"Firewall Rule {connection?.RuleName} Deleted for Ip {connection.Ip} - {result}");
+            logger.Info($"Firewall Rule {connection?.RuleName} Deleted for Ip {connection?.Ip} - {result}");
             return result;
         }
     }

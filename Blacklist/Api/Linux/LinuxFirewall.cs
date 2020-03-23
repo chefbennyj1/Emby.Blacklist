@@ -1,15 +1,14 @@
-﻿using System;
-using Blacklist.Configuration;
+﻿using Blacklist.Configuration;
 
 namespace Blacklist.Api.Linux
 {
     public class LinuxFirewall
     {
-        public static string BlockIpConnection(Connection connectionBan, PluginConfiguration config)
+        public static string BlockIpConnection(Connection connectionBan)
         {
             var ipTablesArgs = $"iptables -A INPUT -s {connectionBan.Ip} -j DROP";
             var result = LinuxBash.GetCommandOutput(ipTablesArgs);
-            return "OK";
+            return result.Contains("(policy DROP)") ? "OK" : string.Empty;
         }
 
         public static string AllowIpConnection(Connection connectionBan, PluginConfiguration config)
@@ -19,8 +18,7 @@ namespace Blacklist.Api.Linux
 
             var ipTablesArgs = $"iptables -D INPUT -s {connectionBan.Ip} -j DROP";
             var result = LinuxBash.GetCommandOutput(ipTablesArgs);
-            return "OK";
-
+            return result.Contains("(policy ACCEPT)") ? "OK" : string.Empty;
         }
     }
 }

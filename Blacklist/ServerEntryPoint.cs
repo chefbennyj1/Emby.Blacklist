@@ -33,10 +33,20 @@ namespace Blacklist
             throw new NotImplementedException();
         }
 
+        // ReSharper disable once MethodNameNotMeaningful
         public void Run()
         {
             Plugin.Instance.UpdateConfiguration(Plugin.Instance.Configuration);
-            
+
+            var config = Plugin.Instance.Configuration;
+            foreach (var connection in config.BannedConnections)
+            {
+                if (!FirewallController.FirewallConnectionRuleExists(connection))
+                {
+                    FirewallController.AddFirewallRule(connection);
+                }
+            }
+
             SessionManager.AuthenticationFailed      += SessionManager_AuthenticationFailed;
             
         }
@@ -53,17 +63,17 @@ namespace Blacklist
                 
                 connection.BannedDateTime = DateTime.UtcNow;
                 connection.IsBanned       = true;
-                connection.RuleName       = "Emby_Authentication_Connection_Requests_Blocked_" + config.RuleNameCount;
-                connection.Id             = "Emby_Authentication_Connection_Requests_Blocked_" + config.RuleNameCount;
+                connection.RuleName       = "Emby_Authentication_Request_Blocked_" + config.RuleNameCount;
+                connection.Id             = "Emby_Authentication_Request_Blocked_" + config.RuleNameCount;
 
                 config.RuleNameCount += 1;
                 config.BannedConnections.Add(connection);
 
                 Plugin.Instance.UpdateConfiguration(config); 
                 
-                var result = FirewallController.AddFirewallRule(connection, config);
+                var result = FirewallController.AddFirewallRule(connection);
 
-                Logger.Info($"Firewall Rule {connection.RuleName} Added for Ip {connection.Ip} - {result}");
+                Logger.Info($"Firewall Rule {connection.RuleName} added for Ip {connection.Ip} - {result}");
 
                 //Remove the connection data from our ConnectionAttemptLog list because they are banned. We no longer have to track their attempts
                 FailedConnectionAttemptLog.Remove(connection);
@@ -74,7 +84,7 @@ namespace Blacklist
         {
             if (FailedConnectionAttemptLog.Exists(a => a.Ip == remoteEndPoint))
             {
-                var connection = FailedConnectionAttemptLog.FirstOrDefault(con => con.Ip == remoteEndPoint);
+                var connection = FailedConnectionAttemptLog.FirstOrDefault(c => c.Ip == remoteEndPoint);
                 
                 if (connection?.LoginAttempts < (config.ConnectionAttemptsBeforeBan != 0 ? config.ConnectionAttemptsBeforeBan : 3))
                 {
