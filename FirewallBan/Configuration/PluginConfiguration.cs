@@ -10,6 +10,5 @@ namespace Blacklist.Configuration
         public int BanDurationMinutes                       { get; set; }
         public bool BanIndefinite                           { get; set; }
         public int RuleNameCount                            { get; set; }
-
     }
 }
