@@ -1,0 +1,35 @@
+﻿<div data-role="page" class=" type-interior pluginConfigurationPage FirewallBanPluginConfigurationPage" data-require="emby-button,emby-input,emby-select,emby-checkbox" data-controller="__plugin/FirewallBanPluginConfigurationPageJS">
+    <div class="content-primary">
+
+        <div class="sectionTitleContainer sectionTitleContainer-cards flex align-items-center">
+            <h2 class="sectionTitle sectionTitle-cards">Firewall Ban</h2>
+        </div>
+
+        <div class="inputContainer fldFailedAttempts">
+            <label class="inputLabel inputLabelUnfocused" for="txtFailedLoginAttemptLimit">Failed login attempt limit:</label>
+            <input is="emby-input" type="number" id="txtFailedLoginAttemptLimit" pattern="[0-9]*" min="3" step="1" label="Failed login attempt limit:" class="emby-input">
+            <div class="fieldDescription">A limit for all user login attempts. Minimum is 3 attempts before ban.</div>
+        </div>
+
+        <div class="inputContainer fldBlockRuleTimeLimit">
+            <label class="inputLabel inputLabelUnfocused" for="txtBlockRuleTimeLimit">Firewall blocked ip time limit:</label>
+            <input is="emby-input" type="number" id="txtBlockRuleTimeLimit" pattern="[0-9]*" min="0" step="1" label="Firewall blocked ip time limit:" class="emby-input">
+            <div class="fieldDescription">A time limit for all ip addresses block in the firewall. If left empty the blocked rule will be indefinite, or until the rule is removed in the configuration below.</div>
+        </div>
+
+        <table class="tblFirewallBanResults table detailTable" style="width: 100%; margin-top: 6em;">
+            <thead>
+                <tr style="text-align: left;">
+                    <th class="detailTableHeaderCell" data-priority="1" style="width: 5%"></th>
+                    <th class="detailTableHeaderCell" data-priority="2" style="width: 20%">Name</th>
+                    <th class="detailTableHeaderCell" data-priority="2" style="width: 10%">Ip Address</th>
+                    <th class="detailTableHeaderCell" data-priority="3" style="width: 20%">Date</th>
+                    <th class="detailTableHeaderCell" data-priority="1" style="width: 10%">Remove</th>
+                    <th class="detailTableHeaderCell" data-priority="1"></th>
+                </tr>
+            </thead>
+            <tbody class="firewallBanTableResultBody"></tbody>
+        </table>
+
+    </div>
+</div>

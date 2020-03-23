@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+<PropertyGroup> <TargetFrameworks>netstandard2.0;</TargetFrameworks> <AssemblyVersion>1.0.0.0</AssemblyVersion> <FileVersion>1.0.0.0</FileVersion> <Version>1.0.0.0</Version> </PropertyGroup>
+
+<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+  <CodeAnalysisRuleSet />
+</PropertyGroup>
+
+<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
+  <CodeAnalysisRuleSet />
+</PropertyGroup>
+
+<ItemGroup>
+  <None Remove="Configuration\Chart.bundle.js" />
+  <None Remove="Configuration\FirewallBanPluginConfigurationPage.html" />
+  <None Remove="Configuration\FirewallBanPluginConfigurationPage.js" />
+  <None Remove="Configuration\TorrentPluginConfigurationPage.html" />
+  <None Remove="Configuration\TorrentPluginConfigurationPage.js" />
+  <None Remove="thumb.jpg" />
+</ItemGroup>
+
+<ItemGroup>
+  <EmbeddedResource Include="Configuration\FirewallBanPluginConfigurationPage.html" />
+  <EmbeddedResource Include="Configuration\FirewallBanPluginConfigurationPage.js" />
+  <EmbeddedResource Include="thumb.jpg" />
+</ItemGroup>
+
+<ItemGroup> <PackageReference Include="mediabrowser.server.core" Version="4.2.0.40" /> <PackageReference Include="System.Memory" Version="4.5.3" /></ItemGroup>
+
+</Project>
