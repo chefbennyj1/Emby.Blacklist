@@ -4,29 +4,42 @@
         <div class="sectionTitleContainer sectionTitleContainer-cards flex align-items-center">
             <h2 class="sectionTitle sectionTitle-cards">Blacklist</h2>
         </div>
-        <form>
+        <form style="margin:2em">
             <div class="inputContainer fldFailedAttempts">
                 <label class="inputLabel inputLabelUnfocused" for="txtFailedLoginAttemptLimit">Failed login attempt limit:</label>
-                <input is="emby-input" type="number" id="txtFailedLoginAttemptLimit" pattern="[0-9]*" min="3" step="1" label="Failed login attempt limit:" class="emby-input">
-                <div class="fieldDescription">A limit for all user login attempts. Minimum is 3 attempts before ban.</div>
+                <input type="number" id="txtFailedLoginAttemptLimit" pattern="[0-9]*" min="3" step="1" label="Failed login attempt limit:" class="emby-input">
+                <div class="fieldDescription">A limit for all user login attempts in 30 seconds. Default is 3 attempts before ban.</div>
             </div>
+            
 
-            <!--<div class="inputContainer fldBlockRuleTimeLimit">
-            <label class="inputLabel inputLabelUnfocused" for="txtBlockRuleTimeLimit">Firewall blocked ip time limit:</label>
-            <input is="emby-input" type="number" id="txtBlockRuleTimeLimit" pattern="[0-9]*" min="0" step="1" label="Firewall blocked ip time limit:" class="emby-input">
-            <div class="fieldDescription">A time limit for all ip addresses block in the firewall. If left empty the blocked rule will be indefinite, or until the rule is removed in the configuration below.</div>
-        </div>-->
+            <label class="listItemCheckboxContainer emby-checkbox-label" style="padding-top:1em">
+                <input name="enableRealTimeMonitoring" type="checkbox" is="emby-checkbox" id="enableReverseLookup" class="emby-checkbox" data-embycheckbox="true">
+                <span class="checkboxLabel">Enable reverse lookup data</span>
+                <span class="emby-checkbox-focushelper"></span>
+            </label>
+            
+            <div class="inputContainer fldIpStackApiKey hide" style="padding-top:1em">
+                <div class="flex align-items-center">
+                    <div class="flex-grow">
+                        <label class="inputLabel inputLabelUnfocused" for="txtIpStackApiKey">ipstack Api Key:</label>
+                        <input type="text" id="txtIpStackApiKey" label="Failed login attempt limit:" class="emby-input">
+                    </div>
+                    <button type="button" is="paper-icon-button-light" id="saveIpStackApiKey" title="Failed Limit" class="emby-input-iconbutton paper-icon-button-light"><i class="md-icon">save</i></button>
+                </div>
+                <div class="fieldDescription">Api key from <a is="emby-linkbutton" class="button-link emby-button"  href="https://ipstack.com">ipstack.com</a>.</div>
+            </div>
         </form>
         <div class="sectionTitleContainer sectionTitleContainer-cards flex align-items-center">
             <h2 class="sectionTitle sectionTitle-cards">Banned Ip Addresses</h2>
         </div>
-        <table class="tblFirewallBanResults table detailTable" style="width: 100%; margin-top: 6em;">
+        <table class="tblFirewallBanResults table detailTable" style="width: 100%; margin-top: 2em;">
             <thead>
                 <tr style="text-align: left;">
                     <th class="detailTableHeaderCell" data-priority="1" style="width: 5%"></th>
                     <th class="detailTableHeaderCell" data-priority="2" style="width: 20%">Name</th>
                     <th class="detailTableHeaderCell" data-priority="2" style="width: 10%">Ip Address</th>
                     <th class="detailTableHeaderCell" data-priority="3" style="width: 20%">Date</th>
+                    <th class="detailTableHeaderCell" data-priority="3" style="width: 20%">Location</th>
                     <th class="detailTableHeaderCell" data-priority="1" style="width: 10%">Remove</th>
                     <th class="detailTableHeaderCell" data-priority="1"></th>
                 </tr>

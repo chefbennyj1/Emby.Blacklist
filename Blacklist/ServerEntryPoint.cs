@@ -2,30 +2,34 @@
 using System.Collections.Generic;
 using System.Linq;
 using Blacklist.Api;
+using Blacklist.Api.ReverseLookup;
 using Blacklist.Configuration;
-using MediaBrowser.Controller.Configuration;
+using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Events;
 using MediaBrowser.Model.Logging;
+using MediaBrowser.Model.Serialization;
 
 namespace Blacklist
 {
     public class ServerEntryPoint : IServerEntryPoint
     {
-        private ISessionManager SessionManager                          { get; set; }
-        private ILogger Logger                                          { get; set; }
-        private ILogManager LogManager                                  { get; set; }
-        private IServerConfigurationManager SystemConfiguration         { get; set; }
-        private List<Connection> FailedConnectionAttemptLog             { get; set; }
-        
-        public ServerEntryPoint(ISessionManager man, ILogManager logManager, IServerConfigurationManager sys)
+        private ISessionManager SessionManager                            { get; set; }
+        private ILogger Logger                                            { get; set; }
+        private ILogManager LogManager                                    { get; set; }
+        private List<ConnectionData> FailedAuthAttemptLog                     { get; set; }
+        private IHttpClient HttpClient                                    { get; set; }
+        private IJsonSerializer JsonSerializer                            { get; set; }
+
+        public ServerEntryPoint(ISessionManager man, ILogManager logManager, IHttpClient client, IJsonSerializer json) //, IServerConfigurationManager sys)
         {
             SessionManager              = man;
             LogManager                  = logManager;
             Logger                      = LogManager.GetLogger(Plugin.Instance.Name);
-            FailedConnectionAttemptLog  = new List<Connection>();
-            SystemConfiguration         = sys;
+            FailedAuthAttemptLog        = new List<ConnectionData>();
+            JsonSerializer              = json;
+            HttpClient                  = client;
         }
 
         public void Dispose()
@@ -47,14 +51,13 @@ namespace Blacklist
                 }
             }
 
-            SessionManager.AuthenticationFailed      += SessionManager_AuthenticationFailed;
-            
+            SessionManager.AuthenticationFailed += SessionManager_AuthenticationFailed;
         }
         
         private void SessionManager_AuthenticationFailed(object sender, GenericEventArgs<AuthenticationRequest> e)
         {
             var config         = Plugin.Instance.Configuration;
-            var connectionList = CheckConnectionAttempt(e.Argument.RemoteEndPoint, config);
+            var connectionList = CheckConnectionAttempt(e.Argument.RemoteAddress.ToString(), config);
 
             foreach (var connection in connectionList)
             {
@@ -65,10 +68,11 @@ namespace Blacklist
                 connection.IsBanned       = true;
                 connection.RuleName       = "Emby_Authentication_Request_Blocked_" + config.RuleNameCount;
                 connection.Id             = "Emby_Authentication_Request_Blocked_" + config.RuleNameCount;
+                connection.LookupData     = config.IpStackApiKey != null ? ReverseLookupController.GetReverseLookupData(connection, HttpClient, JsonSerializer) : null;
 
                 config.RuleNameCount += 1;
                 config.BannedConnections.Add(connection);
-
+                
                 Plugin.Instance.UpdateConfiguration(config); 
                 
                 var result = FirewallController.AddFirewallRule(connection);
@@ -76,43 +80,42 @@ namespace Blacklist
                 Logger.Info($"Firewall Rule {connection.RuleName} added for Ip {connection.Ip} - {result}");
 
                 //Remove the connection data from our ConnectionAttemptLog list because they are banned. We no longer have to track their attempts
-                FailedConnectionAttemptLog.Remove(connection);
+                FailedAuthAttemptLog.Remove(connection);
             }
         }
 
-        private IEnumerable<Connection> CheckConnectionAttempt(string remoteEndPoint, PluginConfiguration config)
+        private IEnumerable<ConnectionData> CheckConnectionAttempt(string remoteEndPoint, PluginConfiguration config)
         {
-            if (FailedConnectionAttemptLog.Exists(a => a.Ip == remoteEndPoint))
+            if (FailedAuthAttemptLog.Exists(a => a.Ip == remoteEndPoint))
             {
-                var connection = FailedConnectionAttemptLog.FirstOrDefault(c => c.Ip == remoteEndPoint);
+                var connection = FailedAuthAttemptLog.FirstOrDefault(c => c.Ip == remoteEndPoint);
                 
                 if (connection?.LoginAttempts < (config.ConnectionAttemptsBeforeBan != 0 ? config.ConnectionAttemptsBeforeBan : 3))
                 {
                     connection.LoginAttempts += 1;
-                    connection.FailAuthenticationRequestDateTimes.Add(DateTime.UtcNow);
+                    connection.FailedAuthDateTimes.Add(DateTime.UtcNow);
 
-                    return FailedConnectionAttemptLog;
+                    return FailedAuthAttemptLog;
                 }
 
-                if (connection?.FailAuthenticationRequestDateTimes.FirstOrDefault() > DateTime.UtcNow.AddSeconds(-30))
+                if (connection?.FailedAuthDateTimes.FirstOrDefault() > DateTime.UtcNow.AddSeconds(-30))
                 {
                     connection.IsBanned = true;
-                    return FailedConnectionAttemptLog;
+                    return FailedAuthAttemptLog;
                 }
-
             }
             else
             {
-                FailedConnectionAttemptLog.Add(new Connection()
+                FailedAuthAttemptLog.Add(new ConnectionData()
                 {
-                    Ip = remoteEndPoint,
-                    LoginAttempts = 1,
-                    IsBanned = false,
-                    FailAuthenticationRequestDateTimes = new List<DateTime> { DateTime.UtcNow },
+                    Ip                                 = remoteEndPoint,
+                    LoginAttempts                      = 1,
+                    IsBanned                           = false,
+                    FailedAuthDateTimes                = new List<DateTime> { DateTime.UtcNow },
                 });
             }
 
-            return FailedConnectionAttemptLog;
+            return FailedAuthAttemptLog;
         }
         
     }

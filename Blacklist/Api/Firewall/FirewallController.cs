@@ -7,51 +7,55 @@ namespace Blacklist.Api
 {
     public class FirewallController
     {
-        public static string AddFirewallRule(Connection connection)
+        public static string AddFirewallRule(ConnectionData connectionData)
         {
             var result = string.Empty;
 
             switch (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 case true:
-                    result = WindowsFirewall.BlockIpConnection(connection);
+                    result = WindowsFirewall.BlockIpConnection(connectionData);
                     break;
 
                 case false:
-                    result = LinuxFirewall.BlockIpConnection(connection);
+                    result = LinuxFirewall.BlockIpConnection(connectionData);
                     break;
             }
 
             return result;
         }
 
-        public static string RemoveFirewallRule(Connection connection, PluginConfiguration config)
+        public static string RemoveFirewallRule(ConnectionData connectionData, PluginConfiguration config)
         {
             var result = string.Empty;
 
             switch (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 case true:
-                    result = WindowsFirewall.AllowIpConnection(connection, config);
+                    result = WindowsFirewall.AllowIpConnection(connectionData);
+                    config.BannedConnections.Remove(connectionData);
+                    Plugin.Instance.UpdateConfiguration(config);
                     break;
                 case false:
-                    result = LinuxFirewall.AllowIpConnection(connection, config);
+                    result = LinuxFirewall.AllowIpConnection(connectionData);
+                    config.BannedConnections.Remove(connectionData);
+                    Plugin.Instance.UpdateConfiguration(config);
                     break;
             }
 
             return result;
         }
 
-        public static bool FirewallConnectionRuleExists(Connection connection)
+        public static bool FirewallConnectionRuleExists(ConnectionData connectionData)
         {
             var result = string.Empty;
             switch (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 case true:
-                    result = WindowsCmd.GetCommandOutput("netsh.exe",$" advfirewall firewall show rule name=\"{connection.RuleName}\"");
+                    result = WindowsCmd.GetCommandOutput("netsh.exe",$" advfirewall firewall show rule name=\"{connectionData.RuleName}\"");
                     return result != "No rules match the specified criteria";
                 case false:
-                    result = LinuxBash.GetCommandOutput($"iptables -L INPUT -v -n | grep \"{connection.Ip}\"");
+                    result = LinuxBash.GetCommandOutput($"iptables -L INPUT -v -n | grep \"{connectionData.Ip}\"");
                     //We need a result example to condition this:
                     //if result is ?? then move on, else add the ip
                     break;

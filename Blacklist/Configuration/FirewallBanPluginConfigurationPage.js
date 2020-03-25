@@ -18,7 +18,9 @@
                 html += '<td class="detailTableBodyCell fileCell"></td>';
                 html += '<td data-title="Name" class="detailTableBodyCell fileCell">' + connection.RuleName + '</td>';
                 html += '<td data-title="Ip" class="detailTableBodyCell fileCell">' + connection.Ip + '</td>';
-                html += '<td data-title="DateTime" class="detailTableBodyCell fileCell">' +  connection.BannedDateTime + '</td>';
+                html += '<td data-title="DateTime" class="detailTableBodyCell fileCell">' + connection.BannedDateTime + '</td>';
+                
+                html += '<td data-title="Location" class="detailTableBodyCell fileCell"><img style="height:1em" src="' + connection.LookupData.location.country_flag + '"/> '  + connection.LookupData.city + ", " + connection.LookupData.region_name + ", " + connection.LookupData.country_name + '</td>';
                 html += '<td data-title="Remove" class="detailTableBodyCell fileCell"><div class="deleteRule"><i class="md-icon">delete</i></div></td>';
                 html += '</tr>';
             });
@@ -40,14 +42,13 @@
                                     (e) => {
 
                                         var row = e.target.closest('tr');
-                                        var ip = row.querySelector('[data-title="Ip"]').innerHTML;
-                                        var id = row.id;
+                                        var ip  = row.querySelector('[data-title="Ip"]').innerHTML;
+                                        var id  = row.id;
 
                                         ApiClient.deleteFirewallRule(ip, id).then((response) => {
                                             if (response.statusText === "OK") {
                                                 ApiClient.getPluginConfiguration(pluginId).then((config) => {
-                                                    var filteredBannedConnection = config.BannedConnections.filter(connection => connection.id !== id);
-                                                    config.BannedConnections = filteredBannedConnection;
+                                                    config.BannedConnections = config.BannedConnections.filter(connection => connection.id !== id);
                                                     ApiClient.updatePluginConfiguration(pluginId, config).then(() => {
                                                         firewallBanTableResultBody.innerHTML = createConnectionTableHtml(config.BannedConnections);
                                                     });
@@ -60,10 +61,43 @@
                         if (config.ConnectionAttemptsBeforeBan) {
                             view.querySelector('#txtFailedLoginAttemptLimit').value =
                                 config.ConnectionAttemptsBeforeBan;
+                        } 
+                        if (config.EnableReverseLookup) {
+                            config.EnableReverseLookup = view.querySelector('#enableReverseLookup').checked = config.EnableReverseLookup;
+                            if (config.EnableReverseLookup === true) {
+                                if (view.querySelector('.fldIpStackApiKey ').classList.contains('hide'))
+                                    view.querySelector('.fldIpStackApiKey ').classList.remove('hide'); 
+                            } else {
+                                if (!view.querySelector('.fldIpStackApiKey ').classList.contains('hide'))
+                                    view.querySelector('.fldIpStackApiKey ').classList.add('hide');
+                            }
+                            if (config.IpStackApiKey) {
+                                view.querySelector('#txtIpStackApiKey').value = config.IpStackApiKey;
+                            }
                         }
-                        if (config.BanDurationMinutes) {
-                            view.querySelector('#txtBlockRuleTimeLimit').value = config.BanDurationMinutes;
-                        }
+                    });
+
+                    view.querySelector('#enableReverseLookup').addEventListener('change', () => {
+                        var reverseLookup = view.querySelector('#enableReverseLookup');
+                        switch (reverseLookup.checked) {
+                            case true:
+                                if (view.querySelector('.fldIpStackApiKey ').classList.contains('hide'))
+                                    view.querySelector('.fldIpStackApiKey ').classList.remove('hide'); 
+                                break;
+                            case false:
+                                if(!view.querySelector('.fldIpStackApiKey ').classList.contains('hide'))
+                                    view.querySelector('.fldIpStackApiKey ').classList.add('hide');
+                                break;
+                        }   
+                    });
+
+                    view.querySelector('#saveIpStackApiKey').addEventListener('click', () => {
+                        ApiClient.getPluginConfiguration(pluginId).then((config) => {
+                            config.IpStackApiKey = view.querySelector('#txtIpStackApiKey').value;
+                            ApiClient.updatePluginConfiguration(pluginId, config).then((result) => {
+                                Dashboard.processPluginConfigurationUpdateResult(result);
+                            });
+                        });
                     });
 
                     view.querySelector('#txtFailedLoginAttemptLimit').addEventListener('change',
@@ -74,15 +108,7 @@
                                 ApiClient.updatePluginConfiguration(pluginId, config).then(() => {});
                             });
                         });
-
-                    view.querySelector('#txtBlockRuleTimeLimit').addEventListener('change',
-                        () => {
-                            ApiClient.getPluginConfiguration(pluginId).then((config) => {
-                                config.BanDurationMinutes  = view.querySelector('#txtBlockRuleTimeLimit').value;
-                                ApiClient.updatePluginConfiguration(pluginId, config).then(() => { });
-                            });
-                        });
-
+                            
                 });
         }
     });
