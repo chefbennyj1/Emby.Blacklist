@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Blacklist.Api;
 using Blacklist.Api.ReverseLookup;
 using Blacklist.Configuration;
@@ -81,6 +82,7 @@ namespace Blacklist
 
                 //Remove the connection data from our ConnectionAttemptLog list because they are banned. We no longer have to track their attempts
                 FailedAuthAttemptLog.Remove(connection);
+                SessionManager.SendMessageToAdminSessions("FirewallAdded", connection, CancellationToken.None);
             }
         }
 

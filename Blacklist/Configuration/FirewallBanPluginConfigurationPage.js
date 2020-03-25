@@ -11,7 +11,7 @@
             });
         };                            
 
-        function createConnectionTableHtml(bannedConnections) {
+        function getConnectionTableHtml(bannedConnections) {
             var html = '';
             bannedConnections.forEach(connection => {
                 html += '<tr class="detailTableBodyRow detailTableBodyRow" id="' + connection.Id + '">';
@@ -19,45 +19,98 @@
                 html += '<td data-title="Name" class="detailTableBodyCell fileCell">' + connection.RuleName + '</td>';
                 html += '<td data-title="Ip" class="detailTableBodyCell fileCell">' + connection.Ip + '</td>';
                 html += '<td data-title="DateTime" class="detailTableBodyCell fileCell">' + connection.BannedDateTime + '</td>';
-                
-                html += '<td data-title="Location" class="detailTableBodyCell fileCell"><img style="height:1em" src="' + connection.LookupData.location.country_flag + '"/> '  + connection.LookupData.city + ", " + connection.LookupData.region_name + ", " + connection.LookupData.country_name + '</td>';
+                if (connection.LookupData.location) {
+                    html +=
+                        '<td data-title="Location" class="detailTableBodyCell fileCell"><img style="height:1em" src="' +
+                        connection.LookupData.location.country_flag +
+                        '"/></td>';
+                    html += '<td data-title="Location" class="detailTableBodyCell fileCell">' +
+                        connection.LookupData.city +
+                        ", " +
+                        connection.LookupData.region_name +
+                        ", " +
+                        connection.LookupData.country_name +
+                        '</td>';
+                } else {
+                    html += '<td data-title="Location" class="detailTableBodyCell fileCell">Internal</td>';
+                    html += '<td data-title="Location" class="detailTableBodyCell fileCell">Subnet Address</td>';
+                }
                 html += '<td data-title="Remove" class="detailTableBodyCell fileCell"><div class="deleteRule"><i class="md-icon">delete</i></div></td>';
                 html += '</tr>';
             });
             return html;
         }
 
+        function deleteButtonPress(event, view) {
+            return new Promise((resolve, reject) => {
+
+                var row      = event.target.closest('tr');
+                var ip       = row.querySelector('[data-title="Ip"]').innerHTML;
+                var ruleName = row.id;
+
+                ApiClient.deleteFirewallRule(ip, ruleName).then((response) => {
+                    if (response.statusText === "OK") {
+                        ApiClient.getPluginConfiguration(pluginId).then((c) => {
+                            c.BannedConnections = c.BannedConnections.filter(connection => connection.id !== id);
+                            ApiClient.updatePluginConfiguration(pluginId, c).then((result) => {
+                                view.querySelector('.connectionTableResultBody').innerHTML =
+                                    getConnectionTableHtml(c.BannedConnections);
+                                resolve(result);
+                            });
+                        });
+                    } else {
+                        reject('error');
+                    }
+                    
+                });
+            });
+        }
+
         return function(view) {
 
             view.addEventListener('viewshow',
                 () => {
-                    ApiClient.getPluginConfiguration(pluginId).then((config) => {
-                        if (config.BannedConnections) {
-                            var firewallBanTableResultBody = view.querySelector('.firewallBanTableResultBody');
-                            firewallBanTableResultBody.innerHTML = createConnectionTableHtml(config.BannedConnections);
 
-                            var ruleDeleteButtons = view.querySelectorAll('.deleteRule');
-                            ruleDeleteButtons.forEach(button => {
+                    ApiClient._webSocket.addEventListener('message', function (msg) {
+                        var json = JSON.parse(msg.data);
+                        if (json.MessageType === "FirewallAdded") {
+                            ApiClient.getPluginConfiguration(pluginId).then((config) => {
+
+                                if (config.BannedConnections) {
+
+                                    view.querySelector('.connectionTableResultBody').innerHTML = getConnectionTableHtml(config.BannedConnections);
+
+                                    view.querySelectorAll('.deleteRule').forEach(button => {
+                                        button.addEventListener('click',
+                                            (e) => {
+                                                deleteButtonPress(e, view).then((result) => {
+                                                    Dashboard.processPluginConfigurationUpdateResult(result);
+                                                });
+                                            });
+                                    });
+                                }
+                            });
+                        }
+
+                    });
+
+                    ApiClient.getPluginConfiguration(pluginId).then((config) => {
+
+                        if (config.BannedConnections) {
+                            
+                            view.querySelector('.connectionTableResultBody').innerHTML = getConnectionTableHtml(config.BannedConnections);
+
+                            view.querySelectorAll('.deleteRule').forEach(button => {
                                 button.addEventListener('click',
                                     (e) => {
-
-                                        var row = e.target.closest('tr');
-                                        var ip  = row.querySelector('[data-title="Ip"]').innerHTML;
-                                        var id  = row.id;
-
-                                        ApiClient.deleteFirewallRule(ip, id).then((response) => {
-                                            if (response.statusText === "OK") {
-                                                ApiClient.getPluginConfiguration(pluginId).then((config) => {
-                                                    config.BannedConnections = config.BannedConnections.filter(connection => connection.id !== id);
-                                                    ApiClient.updatePluginConfiguration(pluginId, config).then(() => {
-                                                        firewallBanTableResultBody.innerHTML = createConnectionTableHtml(config.BannedConnections);
-                                                    });
-                                                });
-                                            };
+                                        deleteButtonPress(e, view).then((result) => {
+                                            Dashboard.processPluginConfigurationUpdateResult(result);
                                         });
                                     });
-                            }); 
+                            });
+
                         }
+
                         if (config.ConnectionAttemptsBeforeBan) {
                             view.querySelector('#txtFailedLoginAttemptLimit').value =
                                 config.ConnectionAttemptsBeforeBan;
