@@ -1,6 +1,4 @@
-﻿using Blacklist.Configuration;
-
-namespace Blacklist.Api.Windows
+﻿namespace Blacklist.Api.Firewall.Windows
 {
     public class WindowsFirewall
     {

@@ -1,6 +1,4 @@
-﻿using Blacklist.Configuration;
-
-namespace Blacklist.Api.Linux
+﻿namespace Blacklist.Api.Firewall.Linux
 {
     public class LinuxFirewall
     {

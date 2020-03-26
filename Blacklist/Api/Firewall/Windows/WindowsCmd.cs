@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Blacklist.Api.Windows
+namespace Blacklist.Api.Firewall.Windows
 {
     public class WindowsCmd
     {

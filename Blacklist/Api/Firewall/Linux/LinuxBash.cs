@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Blacklist.Api.Linux
+namespace Blacklist.Api.Firewall.Linux
 {
     public class LinuxBash
     {

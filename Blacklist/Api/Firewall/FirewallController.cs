@@ -1,9 +1,9 @@
 ﻿using System.Runtime.InteropServices;
-using Blacklist.Api.Linux;
-using Blacklist.Api.Windows;
+using Blacklist.Api.Firewall.Linux;
+using Blacklist.Api.Firewall.Windows;
 using Blacklist.Configuration;
 
-namespace Blacklist.Api
+namespace Blacklist.Api.Firewall
 {
     public class FirewallController
     {

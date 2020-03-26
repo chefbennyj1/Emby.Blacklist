@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Blacklist.Api.ReverseLookup
 {
+    // ReSharper disable InconsistentNaming
     public class Language
     {
         public string code { get; set; }

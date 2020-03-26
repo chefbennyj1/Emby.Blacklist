@@ -5,7 +5,7 @@ namespace Blacklist.Api.ReverseLookup
 {
     public class ReverseLookupController
     {
-        public static ReverseLookupData GetReverseLookupData(Blacklist.ConnectionData connectionData, IHttpClient httpClient, IJsonSerializer jsonSerializer)
+        public static ReverseLookupData GetReverseLookupData(ConnectionData connectionData, IHttpClient httpClient, IJsonSerializer jsonSerializer)
         {
             var config = Plugin.Instance.Configuration;
             var json = httpClient.Get(new HttpRequestOptions()

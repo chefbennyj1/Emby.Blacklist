@@ -5,7 +5,7 @@ using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Model.Services;
 
-namespace Blacklist.Api
+namespace Blacklist.Api.Firewall
 {
     public class FirewallService : IService
     {

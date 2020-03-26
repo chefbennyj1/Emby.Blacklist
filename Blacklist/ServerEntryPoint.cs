@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Blacklist.Api;
+using Blacklist.Api.Firewall;
 using Blacklist.Api.ReverseLookup;
 using Blacklist.Configuration;
 using MediaBrowser.Common.Net;
@@ -19,16 +19,17 @@ namespace Blacklist
         private ISessionManager SessionManager                            { get; set; }
         private ILogger Logger                                            { get; set; }
         private ILogManager LogManager                                    { get; set; }
-        private List<ConnectionData> FailedAuthAttemptLog                     { get; set; }
+        private List<ConnectionData> FailedAuthenticationAudit            { get; set; }
         private IHttpClient HttpClient                                    { get; set; }
         private IJsonSerializer JsonSerializer                            { get; set; }
 
+        // ReSharper disable once TooManyDependencies
         public ServerEntryPoint(ISessionManager man, ILogManager logManager, IHttpClient client, IJsonSerializer json) //, IServerConfigurationManager sys)
         {
             SessionManager              = man;
             LogManager                  = logManager;
             Logger                      = LogManager.GetLogger(Plugin.Instance.Name);
-            FailedAuthAttemptLog        = new List<ConnectionData>();
+            FailedAuthenticationAudit   = new List<ConnectionData>();
             JsonSerializer              = json;
             HttpClient                  = client;
         }
@@ -58,7 +59,8 @@ namespace Blacklist
         private void SessionManager_AuthenticationFailed(object sender, GenericEventArgs<AuthenticationRequest> e)
         {
             var config         = Plugin.Instance.Configuration;
-            var connectionList = CheckConnectionAttempt(e.Argument.RemoteAddress.ToString(), config);
+            var remoteEndpoint = e.Argument.RemoteAddress;
+            var connectionList = CheckConnectionAttempt(remoteEndpoint.ToString(), config);
 
             foreach (var connection in connectionList)
             {
@@ -81,34 +83,34 @@ namespace Blacklist
                 Logger.Info($"Firewall Rule {connection.RuleName} added for Ip {connection.Ip} - {result}");
 
                 //Remove the connection data from our ConnectionAttemptLog list because they are banned. We no longer have to track their attempts
-                FailedAuthAttemptLog.Remove(connection);
+                FailedAuthenticationAudit.Remove(connection);
                 SessionManager.SendMessageToAdminSessions("FirewallAdded", connection, CancellationToken.None);
             }
         }
 
         private IEnumerable<ConnectionData> CheckConnectionAttempt(string remoteEndPoint, PluginConfiguration config)
         {
-            if (FailedAuthAttemptLog.Exists(a => a.Ip == remoteEndPoint))
+            if (FailedAuthenticationAudit.Exists(a => a.Ip == remoteEndPoint))
             {
-                var connection = FailedAuthAttemptLog.FirstOrDefault(c => c.Ip == remoteEndPoint);
+                var connection = FailedAuthenticationAudit.FirstOrDefault(c => c.Ip == remoteEndPoint);
                 
                 if (connection?.LoginAttempts < (config.ConnectionAttemptsBeforeBan != 0 ? config.ConnectionAttemptsBeforeBan : 3))
                 {
                     connection.LoginAttempts += 1;
                     connection.FailedAuthDateTimes.Add(DateTime.UtcNow);
 
-                    return FailedAuthAttemptLog;
+                    return FailedAuthenticationAudit;
                 }
 
                 if (connection?.FailedAuthDateTimes.FirstOrDefault() > DateTime.UtcNow.AddSeconds(-30))
                 {
                     connection.IsBanned = true;
-                    return FailedAuthAttemptLog;
+                    return FailedAuthenticationAudit;
                 }
             }
             else
             {
-                FailedAuthAttemptLog.Add(new ConnectionData()
+                FailedAuthenticationAudit.Add(new ConnectionData()
                 {
                     Ip                                 = remoteEndPoint,
                     LoginAttempts                      = 1,
@@ -117,7 +119,7 @@ namespace Blacklist
                 });
             }
 
-            return FailedAuthAttemptLog;
+            return FailedAuthenticationAudit;
         }
         
     }
