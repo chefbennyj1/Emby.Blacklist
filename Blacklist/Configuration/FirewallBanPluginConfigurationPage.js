@@ -11,6 +11,12 @@
             });
         };                            
 
+        function editBrandingDisclaimer() {
+            ApiClient.getNamedConfiguration("branding").then(function(config) {
+
+            });
+        }
+
         function getConnectionTableHtml(bannedConnections) {
             var html = '';
             bannedConnections.forEach(connection => {

@@ -36,14 +36,14 @@ namespace Blacklist
         {
             new PluginPageInfo
             {
-                Name = "FirewallBanPluginConfigurationPage",
+                Name                 = "FirewallBanPluginConfigurationPage",
                 EmbeddedResourcePath = GetType().Namespace + ".Configuration.FirewallBanPluginConfigurationPage.html",
-                DisplayName = "Blacklist",
-                EnableInMainMenu = true
+                DisplayName          = "Blacklist",
+                EnableInMainMenu     = true
             },
             new PluginPageInfo
             {
-                Name = "FirewallBanPluginConfigurationPageJS",
+                Name                 = "FirewallBanPluginConfigurationPageJS",
                 EmbeddedResourcePath = GetType().Namespace + ".Configuration.FirewallBanPluginConfigurationPage.js"
             }
         };

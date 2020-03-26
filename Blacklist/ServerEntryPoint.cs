@@ -5,9 +5,11 @@ using System.Threading;
 using Blacklist.Api.Firewall;
 using Blacklist.Api.ReverseLookup;
 using Blacklist.Configuration;
+using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Controller.Session;
+using MediaBrowser.Model.Branding;
 using MediaBrowser.Model.Events;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
@@ -22,10 +24,10 @@ namespace Blacklist
         private List<ConnectionData> FailedAuthenticationAudit { get; }
         private IHttpClient HttpClient                         { get; }
         private IJsonSerializer JsonSerializer                 { get; }
-
+        private IConfigurationManager ConfigurationManager     { get; }
         // ReSharper disable once TooManyDependencies
         public ServerEntryPoint(ISessionManager man, ILogManager logManager, IHttpClient client,
-            IJsonSerializer json) //, IServerConfigurationManager sys)
+            IJsonSerializer json, IConfigurationManager  configMan)
         {
             SessionManager            = man;
             LogManager                = logManager;
@@ -33,6 +35,8 @@ namespace Blacklist
             FailedAuthenticationAudit = new List<ConnectionData>();
             JsonSerializer            = json;
             HttpClient                = client;
+            ConfigurationManager = configMan;
+
         }
 
         public void Dispose()
@@ -59,10 +63,10 @@ namespace Blacklist
 
         private void SessionManager_AuthenticationFailed(object sender, GenericEventArgs<AuthenticationRequest> e)
         {
-            var config = Plugin.Instance.Configuration;
+            var config         = Plugin.Instance.Configuration;
             var remoteEndpoint = e.Argument.RemoteAddress;
             var connectionList = CheckConnectionAttempt(remoteEndpoint.ToString(), config);
-
+            
             foreach (var connection in connectionList)
             {
                 if (!connection.IsBanned) continue;
@@ -88,6 +92,7 @@ namespace Blacklist
                 //Remove the connection data from our ConnectionAttemptLog list because they are banned. We no longer have to track their attempts
                 FailedAuthenticationAudit.Remove(connection);
                 SessionManager.SendMessageToAdminSessions("FirewallAdded", connection, CancellationToken.None);
+                
             }
         }
 
@@ -97,20 +102,34 @@ namespace Blacklist
             {
                 var connection = FailedAuthenticationAudit.FirstOrDefault(c => c.Ip == remoteEndPoint);
 
-                if (connection?.LoginAttempts <
-                    (config.ConnectionAttemptsBeforeBan != 0 ? config.ConnectionAttemptsBeforeBan : 3))
+                var connectionAttemptThreshold = config.ConnectionAttemptsBeforeBan != 0 ? config.ConnectionAttemptsBeforeBan : 3;
+                
+                //If this connection has tried and failed, and is not Banned -  but has waited over thirty seconds to try again - reset the attempt count and clear FailedAuthDateTimes List.
+                if (DateTime.UtcNow > connection?.FailedAuthDateTimes.LastOrDefault().AddSeconds(30))
+                {
+                    connection.FailedAuthDateTimes.Clear();
+                    connection.LoginAttempts = 0;
+                }
+                
+                //Log the attempt
+                if (connection?.LoginAttempts < connectionAttemptThreshold)
                 {
                     connection.LoginAttempts += 1;
                     connection.FailedAuthDateTimes.Add(DateTime.UtcNow);
 
+                    //updateBrandingDisclaimer(connection, config);
+
                     return FailedAuthenticationAudit;
                 }
 
+                //Tried to many times in a row, and too quickly  -Ban the IP - could be a brute force attack.
                 if (connection?.FailedAuthDateTimes.FirstOrDefault() > DateTime.UtcNow.AddSeconds(-30))
                 {
                     connection.IsBanned = true;
                     return FailedAuthenticationAudit;
                 }
+
+                
             }
             else
             {
@@ -124,6 +143,14 @@ namespace Blacklist
             }
 
             return FailedAuthenticationAudit;
+        }
+
+        private void updateBrandingDisclaimer(ConnectionData connection, PluginConfiguration config)
+        {
+                var branding = ConfigurationManager.GetConfiguration<BrandingOptions>("branding");
+                branding.LoginDisclaimer =
+                    $"{(config.ConnectionAttemptsBeforeBan > 3 ? config.ConnectionAttemptsBeforeBan : 3) - connection.LoginAttempts} login attempt(s) attempts left.";
+                ConfigurationManager.SaveConfiguration("branding", branding);
         }
     }
 }
