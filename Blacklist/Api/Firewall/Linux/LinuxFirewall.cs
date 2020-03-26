@@ -11,8 +11,6 @@
 
         public static string AllowIpConnection(ConnectionData connectionData)
         {
-            
-
             var ipTablesArgs = $"iptables -D INPUT -s {connectionData.Ip} -j DROP";
             var result = LinuxBash.GetCommandOutput(ipTablesArgs);
             return result.Contains("(policy ACCEPT)") ? "OK" : string.Empty;

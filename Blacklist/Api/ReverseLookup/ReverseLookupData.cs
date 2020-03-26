@@ -49,6 +49,5 @@ namespace Blacklist.Api.ReverseLookup
         public double longitude { get; set; }
         public Location location { get; set; }
         public TimeZone time_zone { get; set; }
-        
     }
 }

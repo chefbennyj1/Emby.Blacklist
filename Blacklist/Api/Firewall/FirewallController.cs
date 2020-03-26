@@ -52,7 +52,8 @@ namespace Blacklist.Api.Firewall
             switch (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 case true:
-                    result = WindowsCmd.GetCommandOutput("netsh.exe",$" advfirewall firewall show rule name=\"{connectionData.RuleName}\"");
+                    result = WindowsCmd.GetCommandOutput("netsh.exe",
+                        $" advfirewall firewall show rule name=\"{connectionData.RuleName}\"");
                     return result != "No rules match the specified criteria";
                 case false:
                     result = LinuxBash.GetCommandOutput($"iptables -L INPUT -v -n | grep \"{connectionData.Ip}\"");

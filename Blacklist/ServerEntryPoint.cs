@@ -16,22 +16,23 @@ namespace Blacklist
 {
     public class ServerEntryPoint : IServerEntryPoint
     {
-        private ISessionManager SessionManager                            { get; set; }
-        private ILogger Logger                                            { get; set; }
-        private ILogManager LogManager                                    { get; set; }
-        private List<ConnectionData> FailedAuthenticationAudit            { get; set; }
-        private IHttpClient HttpClient                                    { get; set; }
-        private IJsonSerializer JsonSerializer                            { get; set; }
+        private ISessionManager SessionManager                 { get; }
+        private ILogger Logger                                 { get; }
+        private ILogManager LogManager                         { get; }
+        private List<ConnectionData> FailedAuthenticationAudit { get; }
+        private IHttpClient HttpClient                         { get; }
+        private IJsonSerializer JsonSerializer                 { get; }
 
         // ReSharper disable once TooManyDependencies
-        public ServerEntryPoint(ISessionManager man, ILogManager logManager, IHttpClient client, IJsonSerializer json) //, IServerConfigurationManager sys)
+        public ServerEntryPoint(ISessionManager man, ILogManager logManager, IHttpClient client,
+            IJsonSerializer json) //, IServerConfigurationManager sys)
         {
-            SessionManager              = man;
-            LogManager                  = logManager;
-            Logger                      = LogManager.GetLogger(Plugin.Instance.Name);
-            FailedAuthenticationAudit   = new List<ConnectionData>();
-            JsonSerializer              = json;
-            HttpClient                  = client;
+            SessionManager            = man;
+            LogManager                = logManager;
+            Logger                    = LogManager.GetLogger(Plugin.Instance.Name);
+            FailedAuthenticationAudit = new List<ConnectionData>();
+            JsonSerializer            = json;
+            HttpClient                = client;
         }
 
         public void Dispose()
@@ -55,10 +56,10 @@ namespace Blacklist
 
             SessionManager.AuthenticationFailed += SessionManager_AuthenticationFailed;
         }
-        
+
         private void SessionManager_AuthenticationFailed(object sender, GenericEventArgs<AuthenticationRequest> e)
         {
-            var config         = Plugin.Instance.Configuration;
+            var config = Plugin.Instance.Configuration;
             var remoteEndpoint = e.Argument.RemoteAddress;
             var connectionList = CheckConnectionAttempt(remoteEndpoint.ToString(), config);
 
@@ -66,18 +67,20 @@ namespace Blacklist
             {
                 if (!connection.IsBanned) continue;
                 if (config.BannedConnections.Exists(c => c == connection)) continue;
-                
+
                 connection.BannedDateTime = DateTime.UtcNow;
                 connection.IsBanned       = true;
                 connection.RuleName       = "Emby_Authentication_Request_Blocked_" + config.RuleNameCount;
                 connection.Id             = "Emby_Authentication_Request_Blocked_" + config.RuleNameCount;
-                connection.LookupData     = config.IpStackApiKey != null ? ReverseLookupController.GetReverseLookupData(connection, HttpClient, JsonSerializer) : null;
+                connection.LookupData     = config.IpStackApiKey != null
+                    ? ReverseLookupController.GetReverseLookupData(connection, HttpClient, JsonSerializer)
+                    : null;
 
                 config.RuleNameCount += 1;
                 config.BannedConnections.Add(connection);
-                
-                Plugin.Instance.UpdateConfiguration(config); 
-                
+
+                Plugin.Instance.UpdateConfiguration(config);
+
                 var result = FirewallController.AddFirewallRule(connection);
 
                 Logger.Info($"Firewall Rule {connection.RuleName} added for Ip {connection.Ip} - {result}");
@@ -93,8 +96,9 @@ namespace Blacklist
             if (FailedAuthenticationAudit.Exists(a => a.Ip == remoteEndPoint))
             {
                 var connection = FailedAuthenticationAudit.FirstOrDefault(c => c.Ip == remoteEndPoint);
-                
-                if (connection?.LoginAttempts < (config.ConnectionAttemptsBeforeBan != 0 ? config.ConnectionAttemptsBeforeBan : 3))
+
+                if (connection?.LoginAttempts <
+                    (config.ConnectionAttemptsBeforeBan != 0 ? config.ConnectionAttemptsBeforeBan : 3))
                 {
                     connection.LoginAttempts += 1;
                     connection.FailedAuthDateTimes.Add(DateTime.UtcNow);
@@ -110,17 +114,16 @@ namespace Blacklist
             }
             else
             {
-                FailedAuthenticationAudit.Add(new ConnectionData()
+                FailedAuthenticationAudit.Add(new ConnectionData
                 {
-                    Ip                                 = remoteEndPoint,
-                    LoginAttempts                      = 1,
-                    IsBanned                           = false,
-                    FailedAuthDateTimes                = new List<DateTime> { DateTime.UtcNow },
+                    Ip                  = remoteEndPoint,
+                    LoginAttempts       = 1,
+                    IsBanned            = false,
+                    FailedAuthDateTimes = new List<DateTime> {DateTime.UtcNow}
                 });
             }
 
             return FailedAuthenticationAudit;
         }
-        
     }
 }

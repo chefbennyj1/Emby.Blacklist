@@ -6,13 +6,12 @@ namespace Blacklist.Api.Firewall.Windows
     {
         public static string GetCommandOutput(string file, string args)
         {
-            
             ProcessStartInfo procStartInfo = new ProcessStartInfo(file, args)
             {
                 RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                Verb = "runas"
+                UseShellExecute        = false,
+                CreateNoWindow         = true,
+                Verb                   = "runas"
             };
 
             using (Process process = new Process())
@@ -24,6 +23,5 @@ namespace Blacklist.Api.Firewall.Windows
                 return (result);
             }
         }
-        
     }
 }

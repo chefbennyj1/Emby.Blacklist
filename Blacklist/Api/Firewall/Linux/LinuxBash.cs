@@ -11,10 +11,10 @@ namespace Blacklist.Api.Firewall.Linux
             ProcessStartInfo procStartInfo = new ProcessStartInfo("/bin/bash", $"sudo -c \"{escapedArgs}\"")
             {
                 RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
+                UseShellExecute        = false,
+                CreateNoWindow         = true
             };
-            
+
             using (Process process = new Process())
             {
                 process.StartInfo = procStartInfo;

@@ -19,7 +19,7 @@ namespace Blacklist
         public override Guid Id => id;
 
         public override string Name => "Blacklist";
-        
+
         public Stream GetThumbImage()
         {
             var type = GetType();
@@ -36,11 +36,10 @@ namespace Blacklist
         {
             new PluginPageInfo
             {
-                Name                 = "FirewallBanPluginConfigurationPage",
+                Name = "FirewallBanPluginConfigurationPage",
                 EmbeddedResourcePath = GetType().Namespace + ".Configuration.FirewallBanPluginConfigurationPage.html",
-                DisplayName          = "Blacklist",
-                EnableInMainMenu     = true
-
+                DisplayName = "Blacklist",
+                EnableInMainMenu = true
             },
             new PluginPageInfo
             {
@@ -50,4 +49,3 @@ namespace Blacklist
         };
     }
 }
-
