@@ -1,4 +1,4 @@
-﻿define(["require", "loading", "dialogHelper", "emby-checkbox", "emby-select"],
+﻿define(["require", "loading", "dialogHelper", "formDialogStyle", "emby-checkbox", "emby-select", "emby-toggle"],
     function (require, loading, dialogHelper) {
 
         var pluginId = "81C4097F-BE07-48B6-B76E-48691FDFC2C5";

@@ -25,9 +25,9 @@ namespace Blacklist
         private IHttpClient HttpClient                         { get; }
         private IJsonSerializer JsonSerializer                 { get; }
         private IConfigurationManager ConfigurationManager     { get; }
+
         // ReSharper disable once TooManyDependencies
-        public ServerEntryPoint(ISessionManager man, ILogManager logManager, IHttpClient client,
-            IJsonSerializer json, IConfigurationManager  configMan)
+        public ServerEntryPoint(ISessionManager man, ILogManager logManager, IHttpClient client, IJsonSerializer json, IConfigurationManager configMan)
         {
             SessionManager            = man;
             LogManager                = logManager;
@@ -35,8 +35,8 @@ namespace Blacklist
             FailedAuthenticationAudit = new List<ConnectionData>();
             JsonSerializer            = json;
             HttpClient                = client;
-            ConfigurationManager = configMan;
-
+            ConfigurationManager      = configMan;
+            
         }
 
         public void Dispose()
@@ -65,8 +65,9 @@ namespace Blacklist
         {
             var config         = Plugin.Instance.Configuration;
             var remoteEndpoint = e.Argument.RemoteAddress;
-            var connectionList = CheckConnectionAttempt(remoteEndpoint.ToString(), config);
-            
+            var deviceId       = e.Argument.DeviceId;
+            var connectionList = CheckConnectionAttempt(remoteEndpoint.ToString(), deviceId, config);
+           
             foreach (var connection in connectionList)
             {
                 if (!connection.IsBanned) continue;
@@ -96,7 +97,7 @@ namespace Blacklist
             }
         }
 
-        private IEnumerable<ConnectionData> CheckConnectionAttempt(string remoteEndPoint, PluginConfiguration config)
+        private IEnumerable<ConnectionData> CheckConnectionAttempt(string remoteEndPoint, string deviceId, PluginConfiguration config)
         {
             if (FailedAuthenticationAudit.Exists(a => a.Ip == remoteEndPoint))
             {
@@ -116,7 +117,7 @@ namespace Blacklist
                 {
                     connection.LoginAttempts += 1;
                     connection.FailedAuthDateTimes.Add(DateTime.UtcNow);
-
+                    connection.deviceId = deviceId;
                     //updateBrandingDisclaimer(connection, config);
 
                     return FailedAuthenticationAudit;
@@ -128,8 +129,6 @@ namespace Blacklist
                     connection.IsBanned = true;
                     return FailedAuthenticationAudit;
                 }
-
-                
             }
             else
             {
@@ -148,9 +147,12 @@ namespace Blacklist
         private void updateBrandingDisclaimer(ConnectionData connection, PluginConfiguration config)
         {
                 var branding = ConfigurationManager.GetConfiguration<BrandingOptions>("branding");
+
                 branding.LoginDisclaimer =
                     $"{(config.ConnectionAttemptsBeforeBan > 3 ? config.ConnectionAttemptsBeforeBan : 3) - connection.LoginAttempts} login attempt(s) attempts left.";
                 ConfigurationManager.SaveConfiguration("branding", branding);
+
+                SessionManager.SendMessageToUserDeviceAndAdminSessions(connection.deviceId, "UpdateDisclaimer", string.Empty, CancellationToken.None);
         }
     }
 }

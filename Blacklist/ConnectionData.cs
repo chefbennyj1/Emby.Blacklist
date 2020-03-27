@@ -14,5 +14,6 @@ namespace Blacklist
         public int LoginAttempts                  { get; set; }
         public string Id                          { get; set; }
         public ReverseLookupData LookupData       { get; set; }
+        public string deviceId                    { get; set; }
     }
 }
