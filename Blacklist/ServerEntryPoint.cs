@@ -13,7 +13,6 @@ using MediaBrowser.Model.Branding;
 using MediaBrowser.Model.Events;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
-using MediaBrowser.Controller.Library;
 
 namespace Blacklist
 {
@@ -102,8 +101,7 @@ namespace Blacklist
             {
                 connection = FailedAuthenticationAudit.FirstOrDefault(c => Equals(c.Ip, authenticationRequest.RemoteAddress.ToString()));
 
-                //If the connection IsRecognized = false do something about it
-
+                
                 var connectionLoginAttemptThreshold = config.ConnectionAttemptsBeforeBan != 0 ? config.ConnectionAttemptsBeforeBan : 3;
                 
                 //If this connection has tried and failed, and is not Banned -  but has waited over thirty seconds to try again - reset the attempt count and clear FailedAuthDateTimes List.
