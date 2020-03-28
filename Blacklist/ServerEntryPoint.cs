@@ -13,6 +13,7 @@ using MediaBrowser.Model.Branding;
 using MediaBrowser.Model.Events;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
+using MediaBrowser.Controller.Authentication;
 
 namespace Blacklist
 {
@@ -21,7 +22,7 @@ namespace Blacklist
         private ISessionManager SessionManager                 { get; }
         private ILogger Logger                                 { get; }
         private ILogManager LogManager                         { get; }
-        private List<ConnectionData> FailedAuthenticationAudit { get; }
+        private List<Connection> FailedAuthenticationAudit     { get; }
         private IHttpClient HttpClient                         { get; }
         private IJsonSerializer JsonSerializer                 { get; }
         private IConfigurationManager ConfigurationManager     { get; }
@@ -32,7 +33,7 @@ namespace Blacklist
             SessionManager            = man;
             LogManager                = logManager;
             Logger                    = LogManager.GetLogger(Plugin.Instance.Name);
-            FailedAuthenticationAudit = new List<ConnectionData>();
+            FailedAuthenticationAudit = new List<Connection>();
             JsonSerializer            = json;
             HttpClient                = client;
             ConfigurationManager      = configMan;
@@ -57,53 +58,54 @@ namespace Blacklist
                     FirewallController.AddFirewallRule(connection);
                 }
             }
-
+            
             SessionManager.AuthenticationFailed += SessionManager_AuthenticationFailed;
         }
 
+        
         private void SessionManager_AuthenticationFailed(object sender, GenericEventArgs<AuthenticationRequest> e)
         {
+
             var config         = Plugin.Instance.Configuration;
-            var remoteEndpoint = e.Argument.RemoteAddress;
-            var deviceId       = e.Argument.DeviceId;
-            var connectionList = CheckConnectionAttempt(remoteEndpoint.ToString(), deviceId, config);
-           
-            foreach (var connection in connectionList)
-            {
-                if (!connection.IsBanned) continue;
-                if (config.BannedConnections.Exists(c => c == connection)) continue;
+            var connection     = CheckConnectionAttempt(e.Argument, config);
 
-                connection.BannedDateTime = DateTime.UtcNow;
-                connection.IsBanned       = true;
-                connection.RuleName       = "Emby_Authentication_Request_Blocked_" + config.RuleNameCount;
-                connection.Id             = "Emby_Authentication_Request_Blocked_" + config.RuleNameCount;
-                connection.LookupData     = config.IpStackApiKey != null
-                    ? ReverseLookupController.GetReverseLookupData(connection, HttpClient, JsonSerializer)
-                    : null;
+            if (!connection.IsBanned) return;
+            if (config.BannedConnections.Exists(c => c == connection)) return;
+            
+            connection.BannedDateTime = DateTime.UtcNow;
+            connection.IsBanned       = true;
+            connection.RuleName       = "Emby_Authentication_Request_Blocked_" + config.RuleNameCount;
+            connection.Id             = "Emby_Authentication_Request_Blocked_" + config.RuleNameCount;
+            connection.LookupData     = config.IpStackApiKey != null
+                ? ReverseLookupController.GetReverseLookupData(connection, HttpClient, JsonSerializer)
+                : null;
 
-                config.RuleNameCount += 1;
-                config.BannedConnections.Add(connection);
+            config.RuleNameCount += 1;
 
-                Plugin.Instance.UpdateConfiguration(config);
+            config.BannedConnections.Add(connection);
 
-                var result = FirewallController.AddFirewallRule(connection);
+            Plugin.Instance.UpdateConfiguration(config);
 
-                Logger.Info($"Firewall Rule {connection.RuleName} added for Ip {connection.Ip} - {result}");
+            var result = FirewallController.AddFirewallRule(connection);
 
-                //Remove the connection data from our ConnectionAttemptLog list because they are banned. We no longer have to track their attempts
-                FailedAuthenticationAudit.Remove(connection);
-                SessionManager.SendMessageToAdminSessions("FirewallAdded", connection, CancellationToken.None);
-                
-            }
+            Logger.Info($"Firewall Rule {connection.RuleName} added for Ip {connection.Ip} - {result}");
+
+            //Remove the connection data from our ConnectionAttemptLog list because they are banned. We no longer have to track their attempts
+            FailedAuthenticationAudit.Remove(connection);
+            SessionManager.SendMessageToAdminSessions("FirewallAdded", connection, CancellationToken.None);
         }
 
-        private IEnumerable<ConnectionData> CheckConnectionAttempt(string remoteEndPoint, string deviceId, PluginConfiguration config)
+        private Connection CheckConnectionAttempt(AuthenticationRequest authenticationRequest, PluginConfiguration config)
         {
-            if (FailedAuthenticationAudit.Exists(a => a.Ip == remoteEndPoint))
-            {
-                var connection = FailedAuthenticationAudit.FirstOrDefault(c => c.Ip == remoteEndPoint);
+            Connection connection = null;
 
-                var connectionAttemptThreshold = config.ConnectionAttemptsBeforeBan != 0 ? config.ConnectionAttemptsBeforeBan : 3;
+            if (FailedAuthenticationAudit.Exists(a => Equals(a.Ip, authenticationRequest.RemoteAddress.ToString())))
+            {
+                connection = FailedAuthenticationAudit.FirstOrDefault(c => Equals(c.Ip, authenticationRequest.RemoteAddress.ToString()));
+
+                //If the connection IsRecognized = false do something about it
+
+                var connectionLoginAttemptThreshold = config.ConnectionAttemptsBeforeBan != 0 ? config.ConnectionAttemptsBeforeBan : 3;
                 
                 //If this connection has tried and failed, and is not Banned -  but has waited over thirty seconds to try again - reset the attempt count and clear FailedAuthDateTimes List.
                 if (DateTime.UtcNow > connection?.FailedAuthDateTimes.LastOrDefault().AddSeconds(30))
@@ -113,38 +115,38 @@ namespace Blacklist
                 }
                 
                 //Log the attempt
-                if (connection?.LoginAttempts < connectionAttemptThreshold)
+                if (connection?.LoginAttempts < connectionLoginAttemptThreshold)
                 {
                     connection.LoginAttempts += 1;
                     connection.FailedAuthDateTimes.Add(DateTime.UtcNow);
-                    connection.deviceId = deviceId;
-                    //updateBrandingDisclaimer(connection, config);
-
-                    return FailedAuthenticationAudit;
+                    
+                    return connection;
                 }
 
                 //Tried to many times in a row, and too quickly  -Ban the IP - could be a brute force attack.
                 if (connection?.FailedAuthDateTimes.FirstOrDefault() > DateTime.UtcNow.AddSeconds(-30))
                 {
                     connection.IsBanned = true;
-                    return FailedAuthenticationAudit;
+                    return connection;
                 }
             }
             else
             {
-                FailedAuthenticationAudit.Add(new ConnectionData
+                connection = new Connection
                 {
-                    Ip                  = remoteEndPoint,
+                    Ip                  = authenticationRequest.RemoteAddress.ToString(),
                     LoginAttempts       = 1,
                     IsBanned            = false,
                     FailedAuthDateTimes = new List<DateTime> {DateTime.UtcNow}
-                });
+                };
+                FailedAuthenticationAudit.Add(connection);
             }
 
-            return FailedAuthenticationAudit;
+            return connection;
         }
 
-        private void updateBrandingDisclaimer(ConnectionData connection, PluginConfiguration config)
+        
+        private void updateBrandingDisclaimer(Connection connection, PluginConfiguration config, AuthenticationRequest authRequest)
         {
                 var branding = ConfigurationManager.GetConfiguration<BrandingOptions>("branding");
 
@@ -152,7 +154,7 @@ namespace Blacklist
                     $"{(config.ConnectionAttemptsBeforeBan > 3 ? config.ConnectionAttemptsBeforeBan : 3) - connection.LoginAttempts} login attempt(s) attempts left.";
                 ConfigurationManager.SaveConfiguration("branding", branding);
 
-                SessionManager.SendMessageToUserDeviceAndAdminSessions(connection.deviceId, "UpdateDisclaimer", string.Empty, CancellationToken.None);
+                SessionManager.SendMessageToUserDeviceAndAdminSessions(authRequest.DeviceId, "UpdateDisclaimer", string.Empty, CancellationToken.None);
         }
     }
 }

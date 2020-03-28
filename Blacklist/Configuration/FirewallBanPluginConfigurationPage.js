@@ -11,13 +11,8 @@
             });
         };                            
 
-        function editBrandingDisclaimer() {
-            ApiClient.getNamedConfiguration("branding").then(function(config) {
-
-            });
-        }
-
-        function getConnectionTableHtml(bannedConnections) {
+        
+        function getBannedConnectionTableHtml(bannedConnections) {
             var html = '';
             bannedConnections.forEach(connection => {
                 html += '<tr class="detailTableBodyRow detailTableBodyRow" id="' + connection.Id + '">';
@@ -60,7 +55,7 @@
                             c.BannedConnections = c.BannedConnections.filter(connection => connection.id !== id);
                             ApiClient.updatePluginConfiguration(pluginId, c).then((result) => {
                                 view.querySelector('.connectionTableResultBody').innerHTML =
-                                    getConnectionTableHtml(c.BannedConnections);
+                                    getBannedConnectionTableHtml(c.BannedConnections);
                                 resolve(result);
                             });
                         });
@@ -84,7 +79,7 @@
 
                                 if (config.BannedConnections) {
 
-                                    view.querySelector('.connectionTableResultBody').innerHTML = getConnectionTableHtml(config.BannedConnections);
+                                    view.querySelector('.connectionTableResultBody').innerHTML = getBannedConnectionTableHtml(config.BannedConnections);
 
                                     view.querySelectorAll('.deleteRule').forEach(button => {
                                         button.addEventListener('click',
@@ -104,7 +99,7 @@
 
                         if (config.BannedConnections) {
                             
-                            view.querySelector('.connectionTableResultBody').innerHTML = getConnectionTableHtml(config.BannedConnections);
+                            view.querySelector('.connectionTableResultBody').innerHTML = getBannedConnectionTableHtml(config.BannedConnections);
 
                             view.querySelectorAll('.deleteRule').forEach(button => {
                                 button.addEventListener('click',
@@ -121,6 +116,7 @@
                             view.querySelector('#txtFailedLoginAttemptLimit').value =
                                 config.ConnectionAttemptsBeforeBan;
                         } 
+
                         if (config.EnableReverseLookup) {
                             config.EnableReverseLookup = view.querySelector('#enableReverseLookup').checked = config.EnableReverseLookup;
                             if (config.EnableReverseLookup === true) {
@@ -134,6 +130,7 @@
                                 view.querySelector('#txtIpStackApiKey').value = config.IpStackApiKey;
                             }
                         }
+
                     });
 
                     view.querySelector('#enableReverseLookup').addEventListener('change', () => {
@@ -141,13 +138,19 @@
                         switch (reverseLookup.checked) {
                             case true:
                                 if (view.querySelector('.fldIpStackApiKey ').classList.contains('hide'))
-                                    view.querySelector('.fldIpStackApiKey ').classList.remove('hide'); 
+                                    view.querySelector('.fldIpStackApiKey ').classList.remove('hide');
                                 break;
                             case false:
                                 if(!view.querySelector('.fldIpStackApiKey ').classList.contains('hide'))
                                     view.querySelector('.fldIpStackApiKey ').classList.add('hide');
                                 break;
-                        }   
+                        }
+                        ApiClient.getPluginConfiguration(pluginId).then((config) => {
+                            config.EnableReverseLookup = view.querySelector('#enableReverseLookup').checked;
+                            ApiClient.updatePluginConfiguration(pluginId, config).then((result) => {
+                                Dashboard.processPluginConfigurationUpdateResult(result);
+                            });
+                        });
                     });
 
                     view.querySelector('#saveIpStackApiKey').addEventListener('click', () => {
