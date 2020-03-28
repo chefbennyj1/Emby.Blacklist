@@ -13,7 +13,7 @@ using MediaBrowser.Model.Branding;
 using MediaBrowser.Model.Events;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
-using MediaBrowser.Controller.Authentication;
+using MediaBrowser.Controller.Library;
 
 namespace Blacklist
 {
@@ -37,7 +37,6 @@ namespace Blacklist
             JsonSerializer            = json;
             HttpClient                = client;
             ConfigurationManager      = configMan;
-            
         }
 
         public void Dispose()
