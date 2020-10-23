@@ -4,62 +4,51 @@
         <div class="sectionTitleContainer sectionTitleContainer-cards flex align-items-center">
             <h2 class="sectionTitle sectionTitle-cards">Blacklist</h2>
         </div>
+        <hr/>
         <form style="margin: 2em">
+            <div class="sectionTitleContainer sectionTitleContainer-cards flex align-items-center">
+                <h2 class="sectionTitle sectionTitle-cards">Firewall</h2>
+            </div>
+            <div class="inputContainer" style="text-align: left;">
+                <label style="width: auto;" class="mdl-switch mdl-js-switch">
+                    <input is="emby-toggle" type="checkbox" id="enableFirewallBlock" class="chkAdvanced noautofocus mdl-switch__input" data-embytoggle="true">
+                    <span class="toggleButtonLabel mdl-switch__label">Enable sign-in error fire wall block</span>
+                    <div class="mdl-switch__trackContainer">
+                        <div class="mdl-switch__track"></div>
+                        <div class="mdl-switch__thumb">
+                            <span class="mdl-switch__focus-helper"></span>
+                        </div>
+                    </div>
+                </label>
+            </div>
+
             <div class="inputContainer fldFailedAttempts">
                 <label class="inputLabel inputLabelUnfocused" for="txtFailedLoginAttemptLimit">Failed login attempt limit:</label>
                 <input type="number" id="txtFailedLoginAttemptLimit" pattern="[0-9]*" min="3" step="1" label="Failed login attempt limit:" class="emby-input">
                 <div class="fieldDescription">A limit for all user login attempts in 30 seconds. Default is 3 attempts before ban.</div>
             </div>
-        
-            <div style="margin: 2em;padding-top:2em">
-                <div class="sectionTitleContainer sectionTitleContainer-cards flex align-items-center">
-                    <h2 class="sectionTitle sectionTitle-cards">Reverse Lookups</h2>
-                </div>
-                <div class="inputContainer" style="text-align: left;">
-                    <label style="width: auto;" class="mdl-switch mdl-js-switch">
-                        <input is="emby-toggle" type="checkbox" id="enableReverseLookup" class="chkAdvanced noautofocus mdl-switch__input" data-embytoggle="true">
-                        <span class="toggleButtonLabel mdl-switch__label">Enable reverse lookup data</span>
-                        <div class="mdl-switch__trackContainer">
-                            <div class="mdl-switch__track"></div>
-                            <div class="mdl-switch__thumb">
-                                <span class="mdl-switch__focus-helper"></span>
-                            </div>
-                        </div>
-                    </label>
-                </div>
-
-                <div class="inputContainer fldIpStackApiKey hide">
-                    <div class="flex align-items-center">
-                        <div class="flex-grow">
-                            <label class="inputLabel inputLabelUnfocused" for="txtIpStackApiKey">ipstack Api Key:</label>
-                            <input type="text" id="txtIpStackApiKey" label="Failed login attempt limit:" class="emby-input">
-                        </div>
-                        <button type="button" is="paper-icon-button-light" id="saveIpStackApiKey" title="Failed Limit" class="emby-input-iconbutton paper-icon-button-light"><i class="md-icon">save</i></button>
-                    </div>
-                    <div class="fieldDescription">Api key from <a is="emby-linkbutton" class="button-link emby-button" href="https://ipstack.com" target="_blank">ipstack.com</a>.</div>
-                </div>
-            </div>
         </form>
+        <hr/>
+        <div style="margin:2em">
+            <div class="sectionTitleContainer sectionTitleContainer-cards flex align-items-center">
+                <h2 class="sectionTitle sectionTitle-cards">Banned Ip Addresses</h2>
+            </div>
 
-        <div class="sectionTitleContainer sectionTitleContainer-cards flex align-items-center">
-            <h2 class="sectionTitle sectionTitle-cards">Banned Ip Addresses</h2>
+            <table class="tblFirewallBanResults table detailTable" style="width: 100%;">
+                <thead>
+                    <tr style="text-align: left;">
+                        <th class="detailTableHeaderCell" data-priority="1" style="width: 1%"></th>
+                        <th class="detailTableHeaderCell" data-priority="2" style="width: 20%">Firewall Rule Name</th>
+                        <th class="detailTableHeaderCell" data-priority="2" style="width: 20%">User Account</th>
+                        <th class="detailTableHeaderCell" data-priority="2" style="width: 10%">Ip Address</th>
+                        <th class="detailTableHeaderCell" data-priority="2" style="width: 20%">Device</th>
+                        <th class="detailTableHeaderCell" data-priority="3" style="width: 20%">Date</th>
+                        <th class="detailTableHeaderCell" data-priority="1" style="width: 10%">Remove</th>
+                        <th class="detailTableHeaderCell" data-priority="1"></th>
+                    </tr>
+                </thead>
+                <tbody class="connectionTableResultBody"></tbody>
+            </table>
         </div>
-
-        <table class="tblFirewallBanResults table detailTable" style="width: 100%;">
-            <thead>
-            <tr style="text-align: left;">
-                <th class="detailTableHeaderCell" data-priority="1" style="width: 5%"></th>
-                <th class="detailTableHeaderCell" data-priority="2" style="width: 20%">Name</th>
-                <th class="detailTableHeaderCell" data-priority="2" style="width: 10%">Ip Address</th>
-                <th class="detailTableHeaderCell" data-priority="3" style="width: 20%">Date</th>
-                <th class="detailTableHeaderCell" data-priority="3" style="width: 5%"></th>
-                <th class="detailTableHeaderCell" data-priority="3" style="width: 20%">Location</th>
-                <th class="detailTableHeaderCell" data-priority="1" style="width: 10%">Remove</th>
-                <th class="detailTableHeaderCell" data-priority="1"></th>
-            </tr>
-            </thead>
-            <tbody class="connectionTableResultBody"></tbody>
-        </table>
-        
     </div>
 </div>

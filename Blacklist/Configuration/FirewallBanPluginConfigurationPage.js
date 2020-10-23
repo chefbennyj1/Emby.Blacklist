@@ -10,33 +10,18 @@
                 url: url
             });
         };                            
-
-        
-        function getBannedConnectionTableHtml(bannedConnections) {
+           
+        function getBannedConnectionTableHtml(config) {
             var html = '';
-            bannedConnections.forEach(connection => {
+            config.BannedConnections.forEach(connection => {
                 html += '<tr class="detailTableBodyRow detailTableBodyRow" id="' + connection.Id + '">';
                 html += '<td class="detailTableBodyCell fileCell"></td>';
-                html += '<td data-title="Name" class="detailTableBodyCell fileCell">' + connection.RuleName + '</td>';
+                html += '<td data-title="Firewall Rule Name" class="detailTableBodyCell fileCell">' + connection.RuleName + '</td>';
+                html += '<td data-title="Name" class="detailTableBodyCell fileCell">' + connection.UserAccountName + '</td>';
                 html += '<td data-title="Ip" class="detailTableBodyCell fileCell">' + connection.Ip + '</td>';
-                html += '<td data-title="DateTime" class="detailTableBodyCell fileCell">' + connection.BannedDateTime + '</td>';
-                if (connection.LookupData.location) {
-                    html +=
-                        '<td data-title="Location" class="detailTableBodyCell fileCell"><img style="height:1em" src="' +
-                        connection.LookupData.location.country_flag +
-                        '"/></td>';
-                    html += '<td data-title="Location" class="detailTableBodyCell fileCell">' +
-                        connection.LookupData.city +
-                        ", " +
-                        connection.LookupData.region_name +
-                        ", " +
-                        connection.LookupData.country_name +
-                        '</td>';
-                } else {
-                    html += '<td data-title="Location" class="detailTableBodyCell fileCell">Internal</td>';
-                    html += '<td data-title="Location" class="detailTableBodyCell fileCell">Subnet Address</td>';
-                }
-                html += '<td data-title="Remove" class="detailTableBodyCell fileCell"><div class="deleteRule"><i class="md-icon">delete</i></div></td>';
+                html += '<td data-title="Device" class="detailTableBodyCell fileCell">' + connection.DeviceName + '</td>';
+                html += '<td data-title="Date" class="detailTableBodyCell fileCell">' + new Date(Date.parse(connection.BannedDateTime)).toDateString() + '</td>';
+                html += '<td data-title="Remove" class="detailTableBodyCell fileCell"><button class="fab deleteRule emby-button"><i class="md-icon">clear</i></button></td>';
                 html += '</tr>';
             });
             return html;
@@ -54,8 +39,7 @@
                         ApiClient.getPluginConfiguration(pluginId).then((c) => {
                             c.BannedConnections = c.BannedConnections.filter(connection => connection.id !== id);
                             ApiClient.updatePluginConfiguration(pluginId, c).then((result) => {
-                                view.querySelector('.connectionTableResultBody').innerHTML =
-                                    getBannedConnectionTableHtml(c.BannedConnections);
+                                view.querySelector('.connectionTableResultBody').innerHTML = getBannedConnectionTableHtml(c);
                                 resolve(result);
                             });
                         });
@@ -77,9 +61,10 @@
                         if (json.MessageType === "FirewallAdded") {
                             ApiClient.getPluginConfiguration(pluginId).then((config) => {
 
+                               
                                 if (config.BannedConnections) {
 
-                                    view.querySelector('.connectionTableResultBody').innerHTML = getBannedConnectionTableHtml(config.BannedConnections);
+                                    view.querySelector('.connectionTableResultBody').innerHTML = getBannedConnectionTableHtml(config);
 
                                     view.querySelectorAll('.deleteRule').forEach(button => {
                                         button.addEventListener('click',
@@ -97,9 +82,15 @@
 
                     ApiClient.getPluginConfiguration(pluginId).then((config) => {
 
+                        if (config.EnableFirewallBlock) {
+                            view.querySelector('#enableFirewallBlock').checked = config.EnableFirewallBlock;
+                        } else {
+                            view.querySelector('#enableFirewallBlock').checked = false;
+                        }
+
                         if (config.BannedConnections) {
                             
-                            view.querySelector('.connectionTableResultBody').innerHTML = getBannedConnectionTableHtml(config.BannedConnections);
+                            view.querySelector('.connectionTableResultBody').innerHTML = getBannedConnectionTableHtml(config);
 
                             view.querySelectorAll('.deleteRule').forEach(button => {
                                 button.addEventListener('click',
@@ -115,53 +106,19 @@
                         if (config.ConnectionAttemptsBeforeBan) {
                             view.querySelector('#txtFailedLoginAttemptLimit').value =
                                 config.ConnectionAttemptsBeforeBan;
-                        } 
-
-                        if (config.EnableReverseLookup) {
-                            config.EnableReverseLookup = view.querySelector('#enableReverseLookup').checked = config.EnableReverseLookup;
-                            if (config.EnableReverseLookup === true) {
-                                if (view.querySelector('.fldIpStackApiKey ').classList.contains('hide'))
-                                    view.querySelector('.fldIpStackApiKey ').classList.remove('hide'); 
-                            } else {
-                                if (!view.querySelector('.fldIpStackApiKey ').classList.contains('hide'))
-                                    view.querySelector('.fldIpStackApiKey ').classList.add('hide');
-                            }
-                            if (config.IpStackApiKey) {
-                                view.querySelector('#txtIpStackApiKey').value = config.IpStackApiKey;
-                            }
-                        }
+                        }   
 
                     });
 
-                    view.querySelector('#enableReverseLookup').addEventListener('change', () => {
-                        var reverseLookup = view.querySelector('#enableReverseLookup');
-                        switch (reverseLookup.checked) {
-                            case true:
-                                if (view.querySelector('.fldIpStackApiKey ').classList.contains('hide'))
-                                    view.querySelector('.fldIpStackApiKey ').classList.remove('hide');
-                                break;
-                            case false:
-                                if(!view.querySelector('.fldIpStackApiKey ').classList.contains('hide'))
-                                    view.querySelector('.fldIpStackApiKey ').classList.add('hide');
-                                break;
-                        }
+                    view.querySelector('#enableFirewallBlock').addEventListener('change', () => {
                         ApiClient.getPluginConfiguration(pluginId).then((config) => {
-                            config.EnableReverseLookup = view.querySelector('#enableReverseLookup').checked;
+                            config.EnableFirewallBlock = view.querySelector('#enableFirewallBlock').checked;
                             ApiClient.updatePluginConfiguration(pluginId, config).then((result) => {
                                 Dashboard.processPluginConfigurationUpdateResult(result);
                             });
                         });
-                    });
-
-                    view.querySelector('#saveIpStackApiKey').addEventListener('click', () => {
-                        ApiClient.getPluginConfiguration(pluginId).then((config) => {
-                            config.IpStackApiKey = view.querySelector('#txtIpStackApiKey').value;
-                            ApiClient.updatePluginConfiguration(pluginId, config).then((result) => {
-                                Dashboard.processPluginConfigurationUpdateResult(result);
-                            });
-                        });
-                    });
-
+                    }); 
+                   
                     view.querySelector('#txtFailedLoginAttemptLimit').addEventListener('change',
                         () => {
                             ApiClient.getPluginConfiguration(pluginId).then((config) => {

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Blacklist.Api.Firewall;
-using Blacklist.Api.ReverseLookup;
 using Blacklist.Configuration;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
@@ -65,19 +64,19 @@ namespace Blacklist
         {
 
             var config         = Plugin.Instance.Configuration;
+
+            if (!config.EnableFirewallBlock) return;
+
             var connection     = CheckConnectionAttempt(e.Argument, config);
 
             if (!connection.IsBanned) return;
             if (config.BannedConnections.Exists(c => c == connection)) return;
             
-            connection.BannedDateTime = DateTime.UtcNow;
+            connection.BannedDateTime = DateTime.Now;
             connection.IsBanned       = true;
             connection.RuleName       = "Emby_Authentication_Request_Blocked_" + config.RuleNameCount;
             connection.Id             = "Emby_Authentication_Request_Blocked_" + config.RuleNameCount;
-            connection.LookupData     = config.IpStackApiKey != null
-                ? ReverseLookupController.GetReverseLookupData(connection, HttpClient, JsonSerializer)
-                : null;
-
+            
             config.RuleNameCount += 1;
 
             config.BannedConnections.Add(connection);
@@ -100,7 +99,6 @@ namespace Blacklist
             if (FailedAuthenticationAudit.Exists(a => Equals(a.Ip, authenticationRequest.RemoteAddress.ToString())))
             {
                 connection = FailedAuthenticationAudit.FirstOrDefault(c => Equals(c.Ip, authenticationRequest.RemoteAddress.ToString()));
-
                 
                 var connectionLoginAttemptThreshold = config.ConnectionAttemptsBeforeBan != 0 ? config.ConnectionAttemptsBeforeBan : 3;
                 
@@ -132,10 +130,13 @@ namespace Blacklist
                 connection = new Connection
                 {
                     Ip                  = authenticationRequest.RemoteAddress.ToString(),
+                    DeviceName          = authenticationRequest.DeviceName,
+                    UserAccountName     = authenticationRequest.Username,
                     LoginAttempts       = 1,
                     IsBanned            = false,
                     FailedAuthDateTimes = new List<DateTime> {DateTime.UtcNow}
                 };
+
                 FailedAuthenticationAudit.Add(connection);
             }
 

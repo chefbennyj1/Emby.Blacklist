@@ -10,7 +10,6 @@ namespace Blacklist.Configuration
         public int BanDurationMinutes                                          { get; set; }
         public bool BanIndefinite                                              { get; set; }
         public int RuleNameCount                                               { get; set; }
-        public bool EnableReverseLookup                                        { get; set; }
-        public string IpStackApiKey                                            { get; set; }
+        public bool EnableFirewallBlock { get; set; }
     }
 }
