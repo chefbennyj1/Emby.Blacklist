@@ -84,8 +84,10 @@
 
                         if (config.EnableFirewallBlock) {
                             view.querySelector('#enableFirewallBlock').checked = config.EnableFirewallBlock;
+                            view.querySelector('#txtFailedLoginAttemptLimit').disabled = !config.EnableFirewallBlock;
                         } else {
                             view.querySelector('#enableFirewallBlock').checked = false;
+                            view.querySelector('#txtFailedLoginAttemptLimit').disabled = true;
                         }
 
                         if (config.BannedConnections) {
@@ -113,6 +115,7 @@
                     view.querySelector('#enableFirewallBlock').addEventListener('change', () => {
                         ApiClient.getPluginConfiguration(pluginId).then((config) => {
                             config.EnableFirewallBlock = view.querySelector('#enableFirewallBlock').checked;
+                            view.querySelector('#txtFailedLoginAttemptLimit').disabled = !view.querySelector('#enableFirewallBlock').checked;
                             ApiClient.updatePluginConfiguration(pluginId, config).then((result) => {
                                 Dashboard.processPluginConfigurationUpdateResult(result);
                             });
