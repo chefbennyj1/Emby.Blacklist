@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using MediaBrowser.Common.Net;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Services;
 
@@ -19,13 +20,13 @@ namespace Blacklist.Api.Firewall
         }
 
         private readonly ILogger logger;
-
+        private IHttpClient Client;
         // ReSharper disable once TooManyDependencies
         public FirewallService(ILogManager logManager)
         {
             logger = logManager.GetLogger(GetType().Name);
         }
-
+        
         public string Delete(DeleteFirewallRule request)
         {
             var config     = Plugin.Instance.Configuration;

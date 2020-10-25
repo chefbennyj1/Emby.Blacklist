@@ -10,12 +10,129 @@
                 url: url
             });
         };                            
-           
+        
+         function openSettingsDialog() {
+            
+            var dlg = dialogHelper.createDialog({
+                size: "medium-tall",
+                removeOnClose: !1,
+                scrollY: true
+            });
+
+            dlg.classList.add("formDialog");
+            dlg.classList.add("ui-body-a");
+            dlg.classList.add("background-theme-a");
+            dlg.style.maxWidth = "35%";
+            dlg.style.maxHeight = "80%";
+
+            var html = '';
+            html += '<div class="formDialogHeader" style="display:flex">';
+            html += '<button is="paper-icon-button-light" class="btnCloseDialog autoSize paper-icon-button-light" tabindex="-1"><i class="md-icon">arrow_back</i></button><h3 class="formDialogHeaderTitle">Settings</h3>';
+            html += '</div>';
+
+            html += '<div class="formDialogContent" style="margin:2em">';
+            html += '<div class="dialogContentInner" style="max-height: 42em;">';
+            html += '<div style="flex-grow:1;">';
+
+            html += '<div class="paperList" style="padding:2em">';
+
+            html += '<div class="inputContainer" style="display: flex">';
+            html += '<label style="width: auto;" class="emby-toggle-label">';
+            html += '<input is="emby-toggle" type="checkbox" id="enableLookup" class="noautofocus emby-toggle emby-toggle-focusring">';
+            html += '<span class="toggleLabel">Enable GeoIp Location</span>';
+            html += '</label>';
+            html += '</div> ';
+
+            html += '<div class="infoBanner flex align-items-center" style="margin: 1em 0;">';
+            html += 'GeoIp uses ipstack.com to locate where the ip originated from. This may not always be the true geo-location of the user, if they use VPN, or Proxy services.';
+            html += 'Sign up for a free ipstack account to get an API access token.';
+            html += '</div>';
+            
+            html += '<div class="inputContainer fldAccessKey">';
+            html += '<label class="inputLabel inputLabelUnfocused" for="txtAccessKey">Ip Stack API Access Key:</label>';
+            html += '<input type="text" id="accessKey" label="Ip Stack API Access Key:" class="emby-input">';
+            html += '<div class="fieldDescription">Your free  Ip Stack API access token.</div>';
+            html += '</div>';
+
+            html += '</div>';
+
+            html += '<div class="paperList" style="padding:2em; margin-top:3em">';
+            html += '<div class="inputContainer fldFailedAttempts">';
+            html += '<label class="inputLabel inputLabelUnfocused" for="txtFailedLoginAttemptLimit">Failed login attempt limit:</label>';
+            html += '<input type="number" id="txtFailedLoginAttemptLimit" pattern="[0-9]*" min="3" step="1" label="Failed login attempt limit:" class="emby-input">';
+            html += '<div class="fieldDescription">A limit for all user login attempts in 30 seconds. Default is 3 attempts before ban.</div>';
+            html += '</div>';
+            html += '</div>';
+
+            html += '</div>';
+
+            html += '<div class="formDialogFooter" style="padding-top:2.5em">';
+            html += '<button id="btnSave" class="raised button-submit block emby-button" is="emby-button">Save</button>';
+            html += '</div>';
+
+            html += '</div>';
+            html += '</div>';
+
+            dlg.innerHTML = html;
+
+            //Enable toggle state
+            ApiClient.getPluginConfiguration(pluginId).then((config) => {
+                if (config.EnableGeoIp) {
+                    dlg.querySelector('#enableLookup').checked = config.EnableGeoIp;
+                } else {
+                    dlg.querySelector('#enableLookup').checked = false;
+                }
+                if (config.ConnectionAttemptsBeforeBan) {
+                    dlg.querySelector('#txtFailedLoginAttemptLimit').value = config.ConnectionAttemptsBeforeBan;
+                }
+                if (config.ipStackAccessToken) {
+                    dlg.querySelector('#accessKey').value = config.ipStackAccessToken;
+                }
+            });
+
+
+            dlg.querySelector('#txtFailedLoginAttemptLimit').addEventListener('change',
+                () => {
+                    ApiClient.getPluginConfiguration(pluginId).then((config) => {
+                        config.ConnectionAttemptsBeforeBan =
+                            dlg.querySelector('#txtFailedLoginAttemptLimit').value;
+                        ApiClient.updatePluginConfiguration(pluginId, config).then(() => {});
+                    });
+                });
+
+            dlg.querySelector('#enableLookup').addEventListener('change',
+                () => {
+                    ApiClient.getPluginConfiguration(pluginId).then((config) => {
+                        config.EnableGeoIp = dlg.querySelector('#enableLookup').checked;
+                        ApiClient.updatePluginConfiguration(pluginId, config).then(() => {});
+                    });
+                }); 
+            dlg.querySelector('#btnSave').addEventListener('click',
+                () => {
+                    ApiClient.getPluginConfiguration(pluginId).then((config) => {
+                        config.ipStackAccessToken = dlg.querySelector('#accessKey').value;
+                        ApiClient.updatePluginConfiguration(pluginId, config).then(() => {});
+                        dialogHelper.close(dlg);
+                    });
+                   
+                });
+
+            dlg.querySelector('.btnCloseDialog').addEventListener('click',
+                () => {
+                    dialogHelper.close(dlg);
+                });
+
+            dialogHelper.open(dlg);
+            
+         }
+
+
         function getBannedConnectionTableHtml(config) {
             var html = '';
             config.BannedConnections.forEach(connection => {
                 html += '<tr class="detailTableBodyRow detailTableBodyRow" id="' + connection.Id + '">';
                 html += '<td class="detailTableBodyCell fileCell"></td>';
+                html += '<td data-title="Country" class="detailTableBodyCell fileCell"><img style="width:3em" src=\"' + connection.FlagIconUrl + '\"></td>';
                 html += '<td data-title="Firewall Rule Name" class="detailTableBodyCell fileCell">' + connection.RuleName + '</td>';
                 html += '<td data-title="Name" class="detailTableBodyCell fileCell">' + connection.UserAccountName + '</td>';
                 html += '<td data-title="Ip" class="detailTableBodyCell fileCell">' + connection.Ip + '</td>';
@@ -60,8 +177,7 @@
                         var json = JSON.parse(msg.data);
                         if (json.MessageType === "FirewallAdded") {
                             ApiClient.getPluginConfiguration(pluginId).then((config) => {
-
-                               
+                                
                                 if (config.BannedConnections) {
 
                                     view.querySelector('.connectionTableResultBody').innerHTML = getBannedConnectionTableHtml(config);
@@ -77,17 +193,14 @@
                                 }
                             });
                         }
-
                     });
 
                     ApiClient.getPluginConfiguration(pluginId).then((config) => {
 
                         if (config.EnableFirewallBlock) {
-                            view.querySelector('#enableFirewallBlock').checked = config.EnableFirewallBlock;
-                            view.querySelector('#txtFailedLoginAttemptLimit').disabled = !config.EnableFirewallBlock;
+                            view.querySelector('#enableFirewallBlock').checked = config.EnableFirewallBlock; 
                         } else {
-                            view.querySelector('#enableFirewallBlock').checked = false;
-                            view.querySelector('#txtFailedLoginAttemptLimit').disabled = true;
+                            view.querySelector('#enableFirewallBlock').checked = false; 
                         }
 
                         if (config.BannedConnections) {
@@ -104,12 +217,12 @@
                             });
 
                         }
+                        
+                    });
 
-                        if (config.ConnectionAttemptsBeforeBan) {
-                            view.querySelector('#txtFailedLoginAttemptLimit').value =
-                                config.ConnectionAttemptsBeforeBan;
-                        }   
-
+                    view.querySelector('#openSettingsDialog').addEventListener('click', (e) => {
+                        e.preventDefault();
+                        openSettingsDialog();
                     });
 
                     view.querySelector('#enableFirewallBlock').addEventListener('change', () => {
@@ -122,15 +235,6 @@
                         });
                     }); 
                    
-                    view.querySelector('#txtFailedLoginAttemptLimit').addEventListener('change',
-                        () => {
-                            ApiClient.getPluginConfiguration(pluginId).then((config) => {
-                                config.ConnectionAttemptsBeforeBan =
-                                    view.querySelector('#txtFailedLoginAttemptLimit').value;
-                                ApiClient.updatePluginConfiguration(pluginId, config).then(() => {});
-                            });
-                        });
-                            
                 });
         }
     });

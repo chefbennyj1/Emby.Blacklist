@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Blacklist.Api.Firewall;
+using Blacklist.Api.ReverseLookup;
 using Blacklist.Configuration;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Net;
@@ -24,7 +26,7 @@ namespace Blacklist
         private IHttpClient HttpClient                         { get; }
         private IJsonSerializer JsonSerializer                 { get; }
         private IConfigurationManager ConfigurationManager     { get; }
-
+        private HackerTarget Target { get; set; }
         // ReSharper disable once TooManyDependencies
         public ServerEntryPoint(ISessionManager man, ILogManager logManager, IHttpClient client, IJsonSerializer json, IConfigurationManager configMan)
         {
@@ -35,6 +37,7 @@ namespace Blacklist
             JsonSerializer            = json;
             HttpClient                = client;
             ConfigurationManager      = configMan;
+            Target = new HackerTarget(client, logManager, json);
         }
 
         public void Dispose()
@@ -67,7 +70,7 @@ namespace Blacklist
 
             if (!config.EnableFirewallBlock) return;
 
-            var connection     = CheckConnectionAttempt(e.Argument, config);
+            var connection     = CheckConnectionAttempt(e.Argument, config).Result;
 
             if (!connection.IsBanned) return;
             if (config.BannedConnections.Exists(c => c == connection)) return;
@@ -92,7 +95,7 @@ namespace Blacklist
             SessionManager.SendMessageToAdminSessions("FirewallAdded", connection, CancellationToken.None);
         }
 
-        private Connection CheckConnectionAttempt(AuthenticationRequest authenticationRequest, PluginConfiguration config)
+        private async Task<Connection> CheckConnectionAttempt(AuthenticationRequest authenticationRequest, PluginConfiguration config)
         {
             Connection connection = null;
 
@@ -102,7 +105,7 @@ namespace Blacklist
                 
                 var connectionLoginAttemptThreshold = config.ConnectionAttemptsBeforeBan != 0 ? config.ConnectionAttemptsBeforeBan : 3;
                 
-                //If this connection has tried and failed, and is not Banned -  but has waited over thirty seconds to try again - reset the attempt count and clear FailedAuthDateTimes List.
+                //If this connection has tried and failed, and is not Banned - but has waited over thirty seconds to try again - reset the attempt count and clear FailedAuthDateTimes List.
                 if (DateTime.UtcNow > connection?.FailedAuthDateTimes.LastOrDefault().AddSeconds(30))
                 {
                     connection.FailedAuthDateTimes.Clear();
@@ -127,8 +130,14 @@ namespace Blacklist
             }
             else
             {
+                ReverseLookupData targetData = null;
+                if (Plugin.Instance.Configuration.EnableGeoIp && !(Plugin.Instance.Configuration.ipStackAccessToken is null))
+                {
+                    targetData = await Target.GetLocation(authenticationRequest.RemoteAddress.ToString());
+                }
                 connection = new Connection
                 {
+                    FlagIconUrl         = targetData is null ? string.Empty : $"https://www.countryflags.io/{targetData.country_code}/shiny/64.png",
                     Ip                  = authenticationRequest.RemoteAddress.ToString(),
                     DeviceName          = authenticationRequest.DeviceName,
                     UserAccountName     = authenticationRequest.Username,
@@ -142,8 +151,7 @@ namespace Blacklist
 
             return connection;
         }
-
-        
+       
         private void updateBrandingDisclaimer(Connection connection, PluginConfiguration config, AuthenticationRequest authRequest)
         {
                 var branding = ConfigurationManager.GetConfiguration<BrandingOptions>("branding");

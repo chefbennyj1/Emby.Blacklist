@@ -11,5 +11,7 @@ namespace Blacklist.Configuration
         public bool BanIndefinite                                              { get; set; }
         public int RuleNameCount                                               { get; set; }
         public bool EnableFirewallBlock { get; set; }
+        public bool EnableGeoIp { get; set; }
+        public string ipStackAccessToken { get; set; }
     }
 }
