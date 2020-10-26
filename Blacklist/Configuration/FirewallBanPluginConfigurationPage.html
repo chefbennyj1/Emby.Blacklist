@@ -21,7 +21,7 @@
                         </label>
                     </div>
                     
-                    <div class="detailSectionHeader" style="margin:2em">
+                    <div class="detailSectionHeader" style="margin:2em 0 0 0">
                         <h2 style="margin: .6em 0; vertical-align: middle; display: inline-block;">Settings</h2>
                         <button is="emby-button" id="openSettingsDialog" class="fab emby-input-iconbutton paper-icon-button-light emby-button" style="margin-left: 1em;"><i class="md-icon">settings</i></button>
                     </div>
@@ -31,9 +31,10 @@
                     <div class="sectionTitleContainer sectionTitleContainer-cards flex align-items-center">
                         <h2 class="sectionTitle sectionTitle-cards">Banned</h2>
                     </div>
-
-                    <table class="tblFirewallBanResults table detailTable" style="width: 100%;">
-                        <thead>
+                    
+                    <div class="paperList" style="padding:2em">
+                        <table class="tblFirewallBanResults table detailTable" style="width: 100%;">
+                            <thead>
                             <tr style="text-align: left;">
                                 <th class="detailTableHeaderCell" data-priority="1" style="width: 1%"></th>
                                 <th class="detailTableHeaderCell" data-priority="2" style="width: 9%">Country</th>
@@ -45,9 +46,10 @@
                                 <th class="detailTableHeaderCell" data-priority="1" style="width: 10%">Remove</th>
                                 <th class="detailTableHeaderCell" data-priority="1"></th>
                             </tr>
-                        </thead>
-                        <tbody class="connectionTableResultBody"></tbody>
-                    </table>
+                            </thead>
+                            <tbody class="connectionTableResultBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

@@ -172,7 +172,8 @@
 
             view.addEventListener('viewshow',
                 () => {
-
+                    var table = view.querySelector(".tblFirewallBanResults");
+                    
                     ApiClient._webSocket.addEventListener('message', function (msg) {
                         var json = JSON.parse(msg.data);
                         if (json.MessageType === "FirewallAdded") {
@@ -198,9 +199,12 @@
                     ApiClient.getPluginConfiguration(pluginId).then((config) => {
 
                         if (config.EnableFirewallBlock) {
-                            view.querySelector('#enableFirewallBlock').checked = config.EnableFirewallBlock; 
+                            view.querySelector('#enableFirewallBlock').checked = config.EnableFirewallBlock;
+                            config.EnableFirewallBlock ? table.style = 'display:block' : 'display:none';
+
                         } else {
-                            view.querySelector('#enableFirewallBlock').checked = false; 
+                            view.querySelector('#enableFirewallBlock').checked = false;
+                            table.style = 'display:none';
                         }
 
                         if (config.BannedConnections) {
@@ -225,12 +229,12 @@
                         openSettingsDialog();
                     });
 
-                    view.querySelector('#enableFirewallBlock').addEventListener('change', () => {
+                    view.querySelector('#enableFirewallBlock').addEventListener('change', (e) => {
                         ApiClient.getPluginConfiguration(pluginId).then((config) => {
-                            config.EnableFirewallBlock = view.querySelector('#enableFirewallBlock').checked;
-                            view.querySelector('#txtFailedLoginAttemptLimit').disabled = !view.querySelector('#enableFirewallBlock').checked;
+                            config.EnableFirewallBlock = e.target.checked;
                             ApiClient.updatePluginConfiguration(pluginId, config).then((result) => {
                                 Dashboard.processPluginConfigurationUpdateResult(result);
+                                e.target.checked === true ? table.style = 'display: block' : 'display: none';
                             });
                         });
                     }); 
