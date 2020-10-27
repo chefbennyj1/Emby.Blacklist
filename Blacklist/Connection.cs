@@ -6,6 +6,7 @@ namespace Blacklist
     public class Connection
     {
         public string Ip                          { get; set; }
+        public string Isp                         { get; set; }
         public string DeviceName                  { get; set; }
         public string FlagIconUrl                 { get; set; }
         public string UserAccountName             { get; set; }
@@ -15,6 +16,8 @@ namespace Blacklist
         public string RuleName                    { get; set; }
         public int LoginAttempts                  { get; set; }
         public string Id                          { get; set; }
+        public bool Proxy { get; set; }
+        public string ServiceProvider { get; set; }
 
     }
 }

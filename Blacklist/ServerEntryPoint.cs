@@ -137,10 +137,13 @@ namespace Blacklist
                 }
                 connection = new Connection
                 {
-                    FlagIconUrl         = targetData is null ? string.Empty : $"https://www.countryflags.io/{targetData.country_code}/shiny/64.png",
+                    FlagIconUrl         = targetData is null ? string.Empty : targetData.countryFlag,
+                    Isp                 = targetData?.isp,
                     Ip                  = authenticationRequest.RemoteAddress.ToString(),
                     DeviceName          = authenticationRequest.DeviceName,
                     UserAccountName     = authenticationRequest.Username,
+                    Proxy               = targetData.proxy,
+                    ServiceProvider     = targetData.isp,
                     LoginAttempts       = 1,
                     IsBanned            = false,
                     FailedAuthDateTimes = new List<DateTime> {DateTime.UtcNow}

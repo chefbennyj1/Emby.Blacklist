@@ -43,17 +43,7 @@
             html += '</label>';
             html += '</div> ';
 
-            html += '<div class="infoBanner flex align-items-center" style="margin: 1em 0;">';
-            html += 'GeoIp uses ipstack.com to locate where the ip originated from. This may not always be the true geo-location of the user, if they use VPN, or Proxy services.';
-            html += 'Sign up for a free ipstack account to get an API access token.';
-            html += '</div>';
             
-            html += '<div class="inputContainer fldAccessKey">';
-            html += '<label class="inputLabel inputLabelUnfocused" for="txtAccessKey">Ip Stack API Access Key:</label>';
-            html += '<input type="text" id="accessKey" label="Ip Stack API Access Key:" class="emby-input">';
-            html += '<div class="fieldDescription">Your free  Ip Stack API access token.</div>';
-            html += '</div>';
-
             html += '</div>';
 
             html += '<div class="paperList" style="padding:2em; margin-top:3em">';
@@ -84,10 +74,7 @@
                 }
                 if (config.ConnectionAttemptsBeforeBan) {
                     dlg.querySelector('#txtFailedLoginAttemptLimit').value = config.ConnectionAttemptsBeforeBan;
-                }
-                if (config.ipStackAccessToken) {
-                    dlg.querySelector('#accessKey').value = config.ipStackAccessToken;
-                }
+                }  
             });
 
 
@@ -110,7 +97,6 @@
             dlg.querySelector('#btnSave').addEventListener('click',
                 () => {
                     ApiClient.getPluginConfiguration(pluginId).then((config) => {
-                        config.ipStackAccessToken = dlg.querySelector('#accessKey').value;
                         ApiClient.updatePluginConfiguration(pluginId, config).then(() => {});
                         dialogHelper.close(dlg);
                     });
@@ -132,12 +118,14 @@
             config.BannedConnections.forEach(connection => {
                 html += '<tr class="detailTableBodyRow detailTableBodyRow" id="' + connection.Id + '">';
                 html += '<td class="detailTableBodyCell fileCell"></td>';
+                html += '<td data-title="Date" class="detailTableBodyCell fileCell">' + new Date(Date.parse(connection.BannedDateTime)).toDateString() + '</td>';
                 html += '<td data-title="Country" class="detailTableBodyCell fileCell"><img style="width:3em" src=\"' + connection.FlagIconUrl + '\"></td>';
                 html += '<td data-title="Firewall Rule Name" class="detailTableBodyCell fileCell">' + connection.RuleName + '</td>';
                 html += '<td data-title="Name" class="detailTableBodyCell fileCell">' + connection.UserAccountName + '</td>';
                 html += '<td data-title="Ip" class="detailTableBodyCell fileCell">' + connection.Ip + '</td>';
+                html += '<td data-title="Isp" class="detailTableBodyCell fileCell">' + connection.ServiceProvider + '</td>';
+                html += '<td data-title="Ip" class="detailTableBodyCell fileCell">' + connection.Proxy + '</td>';
                 html += '<td data-title="Device" class="detailTableBodyCell fileCell">' + connection.DeviceName + '</td>';
-                html += '<td data-title="Date" class="detailTableBodyCell fileCell">' + new Date(Date.parse(connection.BannedDateTime)).toDateString() + '</td>';
                 html += '<td data-title="Remove" class="detailTableBodyCell fileCell"><button class="fab deleteRule emby-button"><i class="md-icon">clear</i></button></td>';
                 html += '</tr>';
             });

@@ -7,9 +7,9 @@ namespace Blacklist.Api.ReverseLookup
 {
     public class HackerTarget
     {
-        private IHttpClient HttpClient         { get; set; }
-        private ILogger Log                    { get; set; }
-        private IJsonSerializer JsonSerializer { get; set; }
+        private IHttpClient HttpClient         { get; }
+        private ILogger Log                    { get; }
+        private IJsonSerializer JsonSerializer { get; }
 
         public HackerTarget(IHttpClient client, ILogManager logMan, IJsonSerializer json)
         {
@@ -19,16 +19,17 @@ namespace Blacklist.Api.ReverseLookup
         }
         public async Task<ReverseLookupData> GetLocation(string ip)
         {
-            
             var config = Plugin.Instance.Configuration;
             if (!(config.ipStackAccessToken is null))
             {
                 var locationData = await HttpClient.Get(new HttpRequestOptions()
                 {
-                    Url = $"http://api.ipstack.com/{ip}?access_key={config.ipStackAccessToken} "
+                    Url = $"http://ip-api.com/json/{ip}"
                 });
 
-                return JsonSerializer.DeserializeFromStream<ReverseLookupData>(locationData);
+                var data = JsonSerializer.DeserializeFromStream<ReverseLookupData>(locationData);
+                data.countryFlag = $"https://www.countryflags.io/{data.countryCode}/shiny/64.png";
+                return data;
             }
 
             return null;
