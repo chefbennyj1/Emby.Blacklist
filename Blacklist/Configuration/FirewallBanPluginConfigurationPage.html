@@ -1,12 +1,13 @@
 ﻿<div data-role="page" style="align-items: center; margin: auto;" class="type-interior pluginConfigurationPage BlacklistPluginConfigurationPage" data-require="emby-button,emby-input,emby-select" data-controller="__plugin/FirewallBanPluginConfigurationPageJS">
+  
     <div class="content-primary">
         <div class="verticalSection verticalSection">
             <div class="sectionTitleContainer sectionTitleContainer-cards align-items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="54" height="54" viewBox="0 0 24 24" style="fill: lightblue;">
                     <path d="M2,6V8H14V6H2M2,10V12H11V10H2M14.17,10.76L12.76,12.17L15.59,15L12.76,17.83L14.17,19.24L17,16.41L19.83,19.24L21.24,17.83L18.41,15L21.24,12.17L19.83,10.76L17,13.59L14.17,10.76M2,14V16H11V14H2Z"></path>
                 </svg>
-                <h2 class="sectionTitle sectionTitle-cards" style="padding-bottom:2em">Blacklist</h2>
-                <hr />
+                <h2 class="sectionTitle sectionTitle-cards" style="padding-bottom: 2em">Blacklist</h2>
+                <hr/>
 
                 <form style="margin: 2em">
 
@@ -20,32 +21,34 @@
                             <span class="toggleLabel">Enable Firewall Block</span>
                         </label>
                     </div>
+
                     
-                    <div class="detailSectionHeader" style="margin:2em 0 0 0">
+
+                    <div class="detailSectionHeader" style="margin: 2em 0 0 0">
                         <h2 style="margin: .6em 0; vertical-align: middle; display: inline-block;">Settings</h2>
                         <button is="emby-button" id="openSettingsDialog" class="fab emby-input-iconbutton paper-icon-button-light emby-button" style="margin-left: 1em;"><i class="md-icon">settings</i></button>
                     </div>
                 </form>
-                <hr />
-                <div style="margin:2em">
+                <hr/>
+                <div style="margin: 2em">
                     <div class="sectionTitleContainer sectionTitleContainer-cards flex align-items-center">
                         <h2 class="sectionTitle sectionTitle-cards">Banned</h2>
                     </div>
-                    
-                    <div class="paperList" style="padding:2em">
+
+                    <div class="paperList" style="padding: 2em">
                         <table class="tblFirewallBanResults table detailTable" style="width: 100%;">
                             <thead>
                                 <tr style="text-align: left;">
                                     <th class="detailTableHeaderCell" data-priority="1" style="width: 1%"></th>
                                     <th class="detailTableHeaderCell" data-priority="3" style="width: 10%">Date</th>
-                                    <th class="detailTableHeaderCell" data-priority="2" style="width: 9%">Country</th>
-                                    <th class="detailTableHeaderCell" data-priority="2" style="width: 20%">Rule Name</th>
+                                    <th class="detailTableHeaderCell" data-priority="2" style="width: 10%">Country</th>
+                                    <th class="detailTableHeaderCell" data-priority="2" style="width: 18%">Rule Name</th>
                                     <th class="detailTableHeaderCell" data-priority="2" style="width: 10%">User Account</th>
-                                    <th class="detailTableHeaderCell" data-priority="2" style="width: 10%">Ip Address</th>
-                                    <th class="detailTableHeaderCell" data-priority="2" style="width: 10%">Service Provider</th>
-                                    <th class="detailTableHeaderCell" data-priority="2" style="width: 10%">Proxy</th>
+                                    <th class="detailTableHeaderCell" data-priority="2" style="width: 8%">Ip Address</th>
+                                    <th class="detailTableHeaderCell" data-priority="2" style="width: 20%">Service Provider</th>
+                                    <th class="detailTableHeaderCell" data-priority="2" style="width: 8%">Proxy</th>
                                     <th class="detailTableHeaderCell" data-priority="2" style="width: 10%">Device</th>
-                                    <th class="detailTableHeaderCell" data-priority="1" style="width: 10%">Remove</th>
+                                    <th class="detailTableHeaderCell" data-priority="1" style="width: 5%">Remove</th>
                                     <th class="detailTableHeaderCell" data-priority="1"></th>
                                 </tr>
                             </thead>

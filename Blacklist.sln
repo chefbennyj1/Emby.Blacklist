@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.645
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blacklist", "Blacklist\Blacklist.csproj", "{273E52CA-16AB-413C-A3F0-552BC39E729C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blacklist", "Blacklist\Blacklist.csproj", "{273E52CA-16AB-413C-A3F0-552BC39E729C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

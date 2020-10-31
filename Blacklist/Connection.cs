@@ -16,8 +16,11 @@ namespace Blacklist
         public string RuleName                    { get; set; }
         public int LoginAttempts                  { get; set; }
         public string Id                          { get; set; }
-        public bool Proxy { get; set; }
-        public string ServiceProvider { get; set; }
+        public bool Proxy                         { get; set; }
+        public string ServiceProvider             { get; set; }
+        public double Longitude                   { get; set; }
+        public double Latitude                    { get; set; }
+        public string Region                      { get; set; }
 
     }
 }

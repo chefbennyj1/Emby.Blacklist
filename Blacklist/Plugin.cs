@@ -45,7 +45,18 @@ namespace Blacklist
             {
                 Name                 = "FirewallBanPluginConfigurationPageJS",
                 EmbeddedResourcePath = GetType().Namespace + ".Configuration.FirewallBanPluginConfigurationPage.js"
+            },
+            new PluginPageInfo
+            {
+                Name                 = "leaflet.css",
+                EmbeddedResourcePath = GetType().Namespace + ".Configuration.leaflet.css"
+            },
+            new PluginPageInfo
+            {
+                Name                 = "leaflet.js",
+                EmbeddedResourcePath = GetType().Namespace + ".Configuration.leaflet.js"
             }
+           
         };
     }
 }
