@@ -163,13 +163,15 @@
 
             html += '<div class="formDialogContent" style="margin:2em">';
             html += '<div class="dialogContentInner" style="max-height: 42em;">';
-            html += '<div style="flex-grow:1;">';
-
-            html += '<div id="connectionData">';
-           
             
+           
 
-            html += '</div>';
+            html += '<div style="background-image: url(https://cache.ip-api.com/' +
+                connection.Longitude +
+                ',' +
+                connection.Latitude +
+                ',10); width: 47em; height: 47em; background-repeat: no-repeat;background-size: cover;"></div>';
+             
             html += '</div>';
             html += '</div>';
 
@@ -249,14 +251,14 @@
                                                 });
                                         });
 
-                                        //view.querySelectorAll('td[data-title="Country"]').forEach(flag => {
-                                        //    flag.addEventListener('click', (e) => {
-                                        //        e.preventDefault();
-                                        //        var connectionId = e.target.closest('tr').id;
-                                        //        var connection = config.BannedConnections.filter(c => c.Id === connectionId);
-                                        //        openGlobeDialog(connection);
-                                        //    });
-                                        //});
+                                        view.querySelectorAll('td[data-title="Country"]').forEach(flag => {
+                                            flag.addEventListener('click', (e) => {
+                                                e.preventDefault();
+                                                var connectionId = e.target.closest('tr').id;
+                                                var connection = config.BannedConnections.filter(c => c.Id === connectionId);
+                                                openGlobeDialog(connection);
+                                            });
+                                        });
                                     }
                                 });
                             }
@@ -289,14 +291,14 @@
                                     });
                             });
 
-                            //view.querySelectorAll('td[data-title="Country"]').forEach(flag => {
-                            //    flag.addEventListener('click', (e) => {
-                            //        e.preventDefault();
-                            //        var connectionId = e.target.closest('tr').id;
-                            //        var connection = config.BannedConnections.filter(c => c.Id === connectionId);
-                            //        openGlobeDialog(connection);
-                            //    });
-                            //});
+                            view.querySelectorAll('td[data-title="Country"]').forEach(flag => {
+                                flag.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    var connectionId = e.target.closest('tr').id;
+                                    var connection = config.BannedConnections.filter(c => c.Id === connectionId);
+                                    openGlobeDialog(connection);
+                                });
+                            });
 
                         }
 

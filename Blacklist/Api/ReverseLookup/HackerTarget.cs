@@ -19,20 +19,15 @@ namespace Blacklist.Api.ReverseLookup
         }
         public async Task<ReverseLookupData> GetLocation(string ip)
         {
-            var config = Plugin.Instance.Configuration;
-            if (!(config.ipStackAccessToken is null))
+            var locationData = await HttpClient.Get(new HttpRequestOptions()
             {
-                var locationData = await HttpClient.Get(new HttpRequestOptions()
-                {
-                    Url = $"http://ip-api.com/json/{ip}"
-                });
+                Url = $"http://ip-api.com/json/{ip}"
+            });
 
-                var data = JsonSerializer.DeserializeFromStream<ReverseLookupData>(locationData);
-                data.countryFlag = $"https://www.countryflags.io/{data.countryCode}/shiny/64.png";
-                return data;
-            }
-
-            return null;
+            var data = JsonSerializer.DeserializeFromStream<ReverseLookupData>(locationData);
+            data.countryFlag = $"https://www.countryflags.io/{data.countryCode}/shiny/64.png";
+            return data;
+           
         }
     }
 }
