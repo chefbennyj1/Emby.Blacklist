@@ -158,19 +158,18 @@
 
             var html = '';
             html += '<div class="formDialogHeader" style="display:flex">';
-            html += '<button is="paper-icon-button-light" class="btnCloseDialog autoSize paper-icon-button-light" tabindex="-1"><i class="md-icon">arrow_back</i></button><h3 class="formDialogHeaderTitle">Settings</h3>';
+            html += '<button is="paper-icon-button-light" class="btnCloseDialog autoSize paper-icon-button-light" tabindex="-1"><i class="md-icon">arrow_back</i></button><h3 class="formDialogHeaderTitle">Location</h3>';
             html += '</div>';
 
             html += '<div class="formDialogContent" style="margin:2em">';
             html += '<div class="dialogContentInner" style="max-height: 42em;">';
-            
-           
+               
 
             html += '<div style="background-image: url(https://cache.ip-api.com/' +
                 connection.Longitude +
                 ',' +
                 connection.Latitude +
-                ',10); width: 47em; height: 47em; background-repeat: no-repeat;background-size: cover;"></div>';
+                ',10); width: 47em; height: 47em; background-repeat: no-repeat;background-size: cover; border: solid 1px darkgray; border-radius: 5px;"></div>';
              
             html += '</div>';
             html += '</div>';
@@ -186,7 +185,7 @@
                 html += '<tr class="detailTableBodyRow detailTableBodyRow" id="' + connection.Id + '">';
                 html += '<td class="detailTableBodyCell fileCell"></td>';
                 html += '<td data-title="Date" class="detailTableBodyCell fileCell">' + new Date(Date.parse(connection.BannedDateTime)).toDateString() + '</td>';
-                html += '<td data-title="Country" class="detailTableBodyCell fileCell"><img style="width:3em" src=\"' + connection.FlagIconUrl + '\"></td>';
+                html += '<td data-title="Country" class="detailTableBodyCell fileCell"><img style="cursor:pointer; width:3em" src=\"' + connection.FlagIconUrl + '\"></td>';
                 html += '<td data-title="Firewall Rule Name" class="detailTableBodyCell fileCell">' + connection.RuleName + '</td>';
                 html += '<td data-title="Name" class="detailTableBodyCell fileCell">' + connection.UserAccountName + '</td>';
                 html += '<td data-title="Ip" class="detailTableBodyCell fileCell">' + connection.Ip + '</td>';
